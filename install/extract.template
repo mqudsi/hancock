@@ -1,0 +1,10 @@
+#!/bin/sh
+#will be filled in by install script
+HANCOCKDIR=
+SMLBIN=
+
+IMAGE=${HANCOCKDIR}/manual/extract-code/extract-code
+ 
+exec ${SMLBIN} @SMLload=${IMAGE}  $* < /dev/null
+
+

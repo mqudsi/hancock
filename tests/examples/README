@@ -1,0 +1,38 @@
+The example programs in this section can be compiled using make and
+the make file Makefile.  
+
+make intlCount.tst
+  Compiles and runs the example in Section 2.1 of the Hancock manual.
+  This test runs the program on the data in 
+               data/calls/binary/calls10
+  which contains two international calls. This data is generated from
+  the data in 
+	       data/calls/ascii/calls10.a
+  using the program data/a2b.
+
+make intlCountCust.tst
+  Compiles and runs the example in Section 2.2 of the Hancock manual.
+  It then compiles and runs the program intlMapView, which iterates
+  over the map created by the first program and reports all phone
+  numbers that made international calls.  It again uses the sample
+  data in data/calls/binary/calls10.  It reports that two numbers each
+  made one international call:
+
+  2222332099 ==> 1
+  2232340199 ==> 1
+
+  You may create your own data files by creating an ascii file of the
+  form found in  data/calls/ascii/calls10.a and then using the program
+  data/a2b to convert the data to binary. 
+
+make ip.tst
+  Compiles and runs the example in Section 2.3 of the Hancock manual.
+  When run over the list of ip addresses and ip packet traces in the
+  directory data, the output should match that in data/ip.sample.out
+
+make wireless.tst
+  Compiles and runs the example in Chapter 13 of the Hancock manual.
+  This test uses the auxiliary program wirelessGen.exe to create an
+  empty directory. When run over the list of wireless call detail
+  records in data/extended/wcd, the output should match that in
+  data/extended/extended.sample.out.

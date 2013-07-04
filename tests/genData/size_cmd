@@ -1,0 +1,15 @@
+#/bin/sh
+
+for f in $*
+do
+   if [ -f $f ]
+   then
+     wc -c $f | awk '{ print $1 }'	
+   else
+     echo 
+   fi
+done
+
+
+
+

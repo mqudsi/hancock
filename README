@@ -1,0 +1,77 @@
+SUPPORTED PLATFORMS
+-------------------
+Linux on X86 machines
+Mac OSX on X86 machines
+Solaris on Sun machines
+
+REQUIREMENTS
+------------
+Installing Hancock from source requires 3 things:
+  1. The Hancock tarball, hancock.2.0.2.tar.gz, available from the
+     Hancock web page: www.research.att.com/projects/hancock.
+
+  2. A C compiler.
+
+  3. The Standard ML of NJ compiler (sml), version 110.65
+     
+     The sml compiler and directions on how to install it are
+     available from the SMLNJ home page:
+       http://www.smlnj.org/index.html.
+     It is a good idea to install the complete sml system rather
+     than trying to select a minimal subset.
+ 
+INSTALLATION
+------------
+1. Download the Hancock tarball, hancock.2.0.tar.gz, from the Hancock web
+   site, www.research.att.com/projects/hancock.
+
+2. Unzip and untar the file, to produce the directory hancock.
+
+3. The installation process is parameterized by a machine description
+   file, templates for which are located in directory hancock/install.
+   The file install_form is generic, while files if.linux, if.macOSX,
+   and if.solaris have been customized for the indicated platforms.  These
+   files may need to be further specialized depending on your
+   particular machine configuration.   Comments in these files
+   indicate how to use them to describe your machine.  Use the
+   appropriate one of these files to create a machine description file
+   for your machine, which we will call if.your_machine.
+
+   Note that the install forms used for the source code installation
+   and the binary code installations are different.
+
+4. In the hancock directory, run the installation script, invoking it
+   with the path to the file describing your machine:
+     
+              install/install.sh if.your_machine
+
+5. The installation process finishes by running a regression suite and
+   using diff to compare its output to a sample output.  If there are no
+   differences, then Hancock reports a successful installation.
+
+6. After installation, the Hancock compiler can be found in bin/hcc.
+
+
+FILE YOU NEED TO CREATE
+-----------------------
+if.my_machine, using one of the files
+  hancock/install/{install_form, if.linux, if.irix, if.solaris}
+as a template.
+
+DOCUMENTATION
+-------------
+The hancock directory contains a subdirectory manual, which
+includes within postscript and pdf versions of the manual.
+This document describes the Hancock language and compiler interface. 
+
+KNOWN BUGS
+----------
+Writes into directories, maps, and pickles declared as const will
+affect their in-memory representation.  The on-disk representation 
+will not be affected.
+
+
+CONTACT INFORMATION
+-------------------
+Report bugs to hancock@research.att.com.
+

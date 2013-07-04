@@ -1,0 +1,24 @@
+ts1: 876899563	 ts2: 107360
+version: 4
+tos: 0
+length: 40
+identification: 51645
+fragment: 16384
+ttl: 27
+protocol: 6
+source: 	135.72.22.184
+destination: 	56.207.195.206
+
+
+ts1: 876899563	 ts2: 107375
+version: 4
+tos: 0
+length: 40
+identification: 25816
+fragment: 16384
+ttl: 124
+protocol: 6
+source: 	16.207.22.39
+destination: 	135.116.195.206
+
+

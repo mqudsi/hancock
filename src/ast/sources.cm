@@ -1,0 +1,124 @@
+Group is
+
+#if defined(NEW_CM)
+        (* standard basis *)
+        $/basis.cm  
+        (* Compiler, up through 110.25 *)
+(*        $/host-compiler.cm *)
+#endif
+
+	(* standard library *)
+	$/smlnj-lib.cm
+
+	(* parser *)
+        ../parser/sources.cm
+
+        (* configuration *)
+        ../variants/sources.cm
+
+	(* C symbols *)
+	symbol-sig.sml
+	symbol.sml
+
+	(* unique identifiers *)
+	uid-sig.sml
+	uid-fn.sml
+
+	(* abstract syntax *)
+	aid.sml  (* was adornment.sml *)
+	pid.sml
+	tid.sml
+	ast-sig.sml
+	ast.sml
+        ctype-eq.sml
+
+	(* language extension support *)
+	cnv-ext-sig.sml
+
+	(* tables for unique identifiers *)
+	uidtabimp-sig.sml
+	uidtabimp-fn.sml
+        aidtab.sml
+	pidtab.sml
+	tidtab.sml
+	tables.sml (* type abbreviations for pidtab, tidtab, aidtab *)
+
+	(* pretty-printers *)
+	pp/pp-lib.sml
+	pp/pp-ast-sig.sml
+	pp/pp-ast.sml
+	pp/pp-ast-adornment-sig.sml
+	pp/pp-ast-ext-sig.sml
+	pp/pp-ast-fn.sml
+
+(* Not currently needed: current uses of ast-equality (in simplify-ast)
+   just use polymorphic equality.  But this code may be useful in the future
+   if the modifications to the ast types violate rules for eqtypes.
+	(* equality modulo alpha renaming *)
+	eq-binary-maps.sml
+        eq-ast-ext-sig.sml
+        eq-ctype.sml
+        eq-ast.sml
+*)
+	(* translation from parse tree *)
+	sizes-sig.sml
+	sizes.sml
+	sizeof-sig.sml
+	sizeof.sml
+
+	type-util-sig.sml
+	type-util.sml
+
+        bindings.sml
+
+	state-sig.sml
+	state.sml
+
+        simplify-assign-ops.sml
+	build-ast-sig.sml
+	build-ast.sml
+
+        anonymous-structs.sml
+
+	initializer-normalizer-sig.sml
+	initializer-normalizer.sml
+
+	(* top level *)
+	parse-to-ast-sig.sml 
+        parse-to-ast.sml
+
+        (* extensions *)
+
+	(* HANCOCK *)
+	extensions/h/ast-subst.sml
+        extensions/h/ast-chkdupfns.sml
+	
+	extensions/h/hinfo.sml
+	
+	extensions/h/hstate-sig.sml
+	extensions/h/hstate.sml
+	
+	extensions/h/hflags.sml
+	
+	extensions/h/herror-sig.sml
+	extensions/h/herror.sml
+
+	extensions/h/h-lib.sml
+	
+	extensions/h/parse-tree-util.sml
+
+	extensions/h/portability.sml
+
+	extensions/h/hrs.sml
+
+	extensions/h/c-lib.sml
+
+	extensions/h/cleanup.sml
+
+        extensions/h/ast-ext-sig.sml
+        extensions/h/ast-ext.sml
+        extensions/h/cnv-ext.sml
+        extensions/h/pp-ast-ext-fn.sml
+
+	extensions/h/dead-defs.sml
+	

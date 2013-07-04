@@ -1,0 +1,23 @@
+# path to desired C compiler
+CC=/usr/bin/cc
+
+# special flags that need to be passed to cpp
+# when compiling Hancock program.
+CPPFLAGS="-fdollars-in-identifiers -U__GNUC__ -D__USE_ISOC9X__ -D__LINUX_PREPROCESSOR_FIXES"
+
+# special flags to be passed to the C compiler
+# when compiling the Hancock runtime system 
+# and ordinary Hancock programs.
+
+CXFLAGS=
+
+# full path to the top-level directory for sml installation.
+SMLDIR=/usr/local/sml
+
+# change this if make is not in your PATH
+# or if the make in your path is very old. (use
+# gmake instead)
+MAKE=make
+
+# change this if ar is not in your PATH
+AR=ar

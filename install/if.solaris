@@ -1,0 +1,25 @@
+# path to desired C compiler
+CC=/opt/SUNWspro/bin/cc
+
+# special flags that need to be passed to cpp
+# when compiling Hancock program.
+CPPFLAGS=
+
+# special flags to be passed to the C compiler
+# when compiling the Hancock runtime system 
+# and ordinary Hancock programs.
+
+CXFLAGS="-xtarget=ultra -xarch=v9"
+
+# full path to the top-level installation for sml
+SMLDIR=/usr/local/sml
+
+# change this if make is not in your PATH
+# or if the make in your path is very old. (use
+# gmake instead)
+MAKE=make
+
+# change this if ar is not in your PATH
+# On the sun, ar may be in /usr/ccs/bin.
+AR=ar
+

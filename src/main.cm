@@ -1,0 +1,22 @@
+Library
+  structure Hancock
+is
+
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+  $smlnj/compiler/compiler.cm
+#else
+  smlnj-lib.cm
+  pp-lib.cm
+#endif
+
+  ast/sources.cm
+  util/sources.cm
+  hancock.sml
+
+
+
+
+

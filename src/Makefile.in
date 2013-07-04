@@ -1,0 +1,35 @@
+# hcc Hancock compiler Makefile
+# $Revision: 1.10 $
+
+CC=/usr/bin/cc
+CXFLAGS=
+AR=
+
+.PHONY:	RUNTIME compiler library
+
+all:	RUNTIME compiler 
+
+compiler:
+	echo Making compiler
+	../sml < build-exec.sml
+	cp build/hancock.* ../lib
+
+RUNTIME:
+	echo Making runtime system
+	cd runtime; $(MAKE) -f Makefile CC="$(CC)" CXFLAGS="$(CXFLAGS)" AR="$(AR)"
+	cp runtime/hrs/lib/libhrs-g.a ../lib/libhrs-g.a
+	cp runtime/hrs/lib/libhrs.a ../lib/libhrs.a
+	cp runtime/hrs/include/*.h ../include
+	cp runtime/sfio/include/*.h ../include
+
+library:
+	echo Making library
+	cd ../hl; $(MAKE) -f Makefile AR="$(AR)"
+
+clean:
+	cd runtime; $(MAKE) clean
+	cd ../hl; $(MAKE) clean
+
+veryclean: clean
+	cd ../lib; rm -rf sml.runtime hancock.* libhl-g.a libhl.a libhrs-g.a libhrs.a
+	cd ../include; rm -rf *.h *.hh

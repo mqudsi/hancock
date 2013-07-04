@@ -1,0 +1,11 @@
+#include <callDetail.hh>
+
+map foo {
+  key ppn_t;
+  value float;
+};
+
+void main() {
+}
+
+

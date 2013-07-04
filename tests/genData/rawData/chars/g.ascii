@@ -1,0 +1,35 @@
+#include <callDetail.hh>
+
+typdef test struct {
+  char c;
+}
+
+int f(Sfio_t *file, test *h){
+  return (sfscanf(file,"%c", &(h->c)) == 1);
+}
+
+
+stream foo_t {
+  f: Sfio_t  => test;
+};
+
+phase goo(foo_t myStream){
+  iterate 
+  over myStream
+  sortedby c
+  withevents record;
+  
+  end{
+	sfprintf(sfstdout, "\n");
+  }
+
+  event record (r){
+    sfprintf(sfstdout,"%c",r.c);
+  }
+}
+
+void sig_main(foo_t myStream <s:>){
+
+}
+
+

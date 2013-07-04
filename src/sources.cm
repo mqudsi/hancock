@@ -1,0 +1,9 @@
+Group is
+	ast/sources.cm
+	
+	(* Hancock utilities *)
+	util/sources.cm
+
+	(* Build executable *)
+	regexp-lib.cm
+	hancock.sml

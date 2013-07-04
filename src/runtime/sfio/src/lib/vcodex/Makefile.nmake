@@ -1,0 +1,11 @@
+/*	libvcodex.a nmake Makefile
+**	Written by Kiem-Phong Vo (kpv@research.att.com)
+*/
+VERSION = 1.0
+CCFLAGS = -O
+
+VCDIFF=	Vcdiff/vcddiff.c Vcdiff/vcdundiff.c Vcdiff/vcdtable.c Vcdiff/vcdcache.c
+VCMISC= VCmisc/vcmap.c
+SRCS=	vcopen.c vcclose.c vcstrio.c vcdisc.c vcprivate.c vcwhatis.c $(VCDIFF) $(VCMISC)
+
+vcodex $(VERSION):LIBRARY:	$(SRCS)

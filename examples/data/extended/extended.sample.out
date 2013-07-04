@@ -1,0 +1,33 @@
+map key = 9736152669
+lookup key 9736152669
+Tower: MORRISTOWN, weight = 0.150000
+Tower: FLORHAMPARK, weight = 0.150000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Other weight = 0.000000
+map key = 9736154386
+lookup key 9736154386
+Tower: MIDDLETOWN, weight = 0.150000
+Tower: MORRISTOWN, weight = 0.150000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Other weight = 0.000000
+map key = 9736102669
+lookup key 9736102669
+Tower: MORRISTOWN, weight = 0.150000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Other weight = 0.000000
+map key = 9736154386
+lookup key 9736154386
+Tower: REDBANK, weight = 0.150000
+Tower: MIDDLETOWN, weight = 0.150000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Tower: Unknown, weight = 0.000000
+Other weight = 0.000000
+Date of last update = unspecified.

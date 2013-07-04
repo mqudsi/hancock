@@ -1,0 +1,257 @@
+CORRECT:
+
+(sigmain)
+
+sigmain001.hc
+  Tests char parameters to sigmain.  Includes those with arguments and
+  those without.  It also includes defaults. 
+
+
+sigmain002.hc
+  Tests char* parameters to sigmain. Includes defaults and typedefs.
+
+sigmain003.hc
+  Tests stream parameters to sigmain.  Includes defaults and const
+  annotations. 
+
+sigmain004.hc
+  Tests map parameters to sigmain.  Includes defaults and const, new,
+  and exists annotations.  
+
+sigmain005.hc
+  Tests int parameters to sigmain.  Includes defaults.  
+
+sigmain006.hc
+  Tests double parameters to sigmain.  Includes defaults.  
+
+sigmain007.hc
+  creates new activity map.
+
+sigmain008.hc
+  accesses existing activity map
+
+sigmain009.hc
+  tests command-line comments
+
+sigmain010.hc
+  tests default parameters and dependencies between parameters.
+
+sigmain011.hc
+  tests float parameters to sigmain
+
+sigmain012.hc
+  tests long, long long, unsigned long, and unsigned long long parameters.
+
+*sigmain013.hc*
+  discontinued: tested long doubles.
+
+sigmain014.hc
+  tests signed and unsigned short and int parameters.
+
+sigmain015.hc
+  tests signed and unsigned char parameters.
+
+*sigmain016.hc*
+  this file seems never to have existed.
+
+*sigmain017.hc*
+  discontinued.  this file tested integer parameters?
+
+* map001.hc  *
+  discontinued.
+  Simple map declaration (does nothing)
+
+map002.hc
+  Reads a map from the commandline writes, and reads a value.
+
+map003.hc
+  Test constant map defaults for a structure.
+
+map004.hc 
+  Test function defaults.
+
+map005.hc
+  Test declaration of map variable immediately after map type
+  declaration. 
+
+map006.hc
+  creates directory containing map with user-supplied compression.
+
+map007.hc
+  tests portability code for maps.
+
+map008.hc
+  tests three level keys
+
+map009.hc
+  *not used.*
+
+phase001.hc
+  Simply reads in a stream and prints out where it is as it iterates
+  over it.
+
+phase002.hc
+  Has event level variables that should be re-initialized each time
+  through.
+
+phase003.hc
+  Has events with struct type.
+
+phase004.hc
+  has filtering code
+
+phase005.hc
+  has no sorting code
+
+phase006.hc
+  nested events
+
+phase007.hc
+ * not used *
+
+phase008.hc
+ uses hierarchical events
+
+phase009.hc
+  tests stream declarations from strings.
+
+range001.hc
+   * no longer used. *
+   area-code range.
+
+range002.hc
+   character range.
+
+range003.hc
+   * no longer used *
+   declares a map that uses a key struct that has ranges.
+
+range004.hc
+   * no longer used *
+   program that reads and writes to a map with range keys.
+
+range005.hc
+   * no longer used *
+   declares and creates (via new) a map with range keys.
+
+range006.hc
+   code that reads from and writes to a map with range keys, using
+   physical keys.
+
+range007.hc
+   code that reads from and writes to a map with range keys, using
+   logical keys.
+
+
+
+iteration001.hc
+   creates map, stores some values, iterates over map.
+
+iteration002.hc
+   uses map, iterates over map, across area codes and exchanges.
+
+iteration003.hc
+   uses map, iterates over map, catching npa, nxx, and record events.
+   XXX- if code catches line event, compiler raises type error.  What's up?
+
+iteration004.hc
+   uses map, iterates over map, catching nxx events.  This phase calls
+   another phase that iterates over map, catching record events.
+
+iteration005.hc
+   uses map, iterates over map, catching nxx events.  This phase calls
+   another phase that iterates over map, catching record events.
+   Uses function call to initialize boundary.
+
+iteration006.hc
+  *discontinued*
+
+iteration007.hc
+  tests map iteration using physical keys as boundary.
+
+
+
+
+(directories)
+directory001.hc
+   includes directory type declaration, with map and int.
+   XXX- needs openfile, closefile prototypes from somewhere.
+
+directory002.hc
+   sigmain takes directory parameter.
+
+directory003.hc
+   sigmain takes new directory parameter, which stores int, float, and
+   map. updates values.
+
+directory004.hc
+   sigmain takes an existing directory and creates a new one using
+   copy operation.
+  
+directory005.hc
+   directory with structure piece.
+ 
+directory006.hc
+   directory copy with a structure piece.
+
+directory007.hc
+   directory with an array.
+
+directory008.hc
+   directory with array of structs and struct with arrays, and strings
+   and chars.
+
+directory009.hc
+   reads directory created in directory008.hc, creates new one by hand.
+
+directory010.hc
+  copies directory cretaed in directory008.hc
+
+directory011.hc
+  copies string from command-line to directory.
+
+directory012.hc
+  *discontinued*
+
+directory013.hc
+  tests interactions with directories, sigmain, and initializing declartions. 
+
+directory014.hc
+  tests basic c types in directories.
+
+directory015.hc
+  tests basic c types in directories plus copying.
+
+directory016.hc
+  tests pickles in directories.
+
+directory017.hc
+  tests pickles with copying in directories.
+
+directory018.hc
+  *discontinued*
+
+(records)
+record001.hc
+  Record with explicit coercion, and 1 unnamed field.
+
+record002.hc
+  Record with explicit coercions, and 1 named field.
+
+record003.hc 
+  Record with explicit coercions, and multiple named fields.
+
+record004.hc
+  Record without explicit coercions (simple)
+
+record005.hc
+  Record without explicit coercions (complex -- include arrays.)
+
+record006.hc
+  Record with explicit coercions and mix of <=> and records.
+
+(streams)
+stream001.hc
+  read in an ascii stream of characters and print it to stdout.
+
+

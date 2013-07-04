@@ -1,0 +1,14 @@
+
+#!/bin/sh
+#will be filled in by install script
+HANCOCKDIR=
+SMLBIN=
+
+# 
+IMAGE=${HANCOCKDIR}/lib/hancock
+
+
+exec ${SMLBIN} @SMLload=${IMAGE} ${HANCOCKDIR} $* -I ${HANCOCKDIR}/include \
+ -L${HANCOCKDIR}/lib < /dev/null
+
+

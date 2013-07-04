@@ -1,0 +1,28 @@
+CC=/usr/bin/cc
+CXFLAGS=
+AR=
+HCC=../bin/hcc
+HCC_FLAGS=
+
+all:	library
+
+clean:
+	rm -f *.o libhl.a libhl-g.a
+
+library: hl.a hl-g.a
+	@echo Making Hancock Library
+	cp hl.hh ../include/hl.hh
+	cp libhl.a ../lib
+	cp libhl-g.a ../lib
+
+hl.a:	mapstream.o 
+	$(AR) -r libhl.a mapstream.o
+
+mapstream.o:	mapstream.hc hl.hh
+	$(HCC) $(HCC_FLAGS) -O2 -c -o mapstream.o mapstream.hc
+
+hl-g.a:	mapstream-g.o 
+	$(AR) -r libhl-g.a mapstream-g.o
+
+mapstream-g.o:	mapstream.hc hl.hh
+	$(HCC) $(HCC_FLAGS) -g -c -o mapstream-g.o mapstream.hc

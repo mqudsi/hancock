@@ -1,0 +1,1783 @@
+(* #define DPARSE  *) 
+(* comment out previous line for C parser; uncomment for D parser *)
+
+(* Copyright (c) 1998 by Lucent Technologies *)
+
+(* new comments from Satish Chandra, 6/21/99 *)
+(* Overriding design approach: 
+ *
+ * Accept all legal programs, but possibly some illegal ones at this stage. 
+ * Do not attempt to make a really tight grammar. Our tools are supposed to
+ * work on "correct" C programs (i.e. those that cc -ansi would compile without
+ * warnings). Of course, a type checker on the parse tree can report some errors
+ * as syntax errors.
+ *
+ * Note on MARK:
+ *
+ * externalDecl, statement, and expression are the non-terms that are marked.
+ * Compound statements are not separately marked.
+ * declarations eventually become either a statement or a externalDecl
+ *   if they are outside any function. They are marked accordingly.
+ *
+ * Note on function definitions:
+ *
+ * The order of the paramaters will always come from the FuncDecr.
+ * The types of the parameter may come from the second declaration list  
+ * (in K&R style)
+ *
+ * Note on the structure of the grammar:
+ *
+ * It is difficult to write a LALR(1) grammar based on the grammar given at
+ * the back of the K&R book. The basic difficulty is that both TYPE_NAME and
+ * ID are tokens that are strings, but it depends on the context whether
+ * a given string is to be treated as an ID or a TYPE_NAME.
+ * We have borrowed the solution used in GCC's parser specification. In this
+ * scheme, the lexer always return the token TYPE_NAME if a name has been 
+ * defined as a type name (via a typedef) in an applicable scope. The grammar 
+ * productions are heavily rearranged (from K&R's grammar) to do the right 
+ * thing. In this rearrangement, the basic idea is that a TYPE_NAME is  
+ * allowed to appear in a declaration as a plain identifier only after a type 
+ * specifier has previously appeared in the declaration. Also, a TYPE_NAME may 
+ * appear only once in a declaration as a type specifier.
+ *)
+
+(* old comments below *)
+(* Shortcomings *)
+(* 1. No floating-point whatsoever *)
+
+(* Notes on MARK:
+ * externalDecl and statement are the non-terms that are marked.
+ * Compound statements are not separately marked.
+ * expressions are not marked at all.
+ * declarations eventually become either a statement or a externalDecl
+ *   if they are outside any function. they are marked accordingly.
+ *)
+ 
+(* Overriding theme: accept all legal programs, but also some illegal ones at this
+ * stage. Do not attempt to make a really tight grammar. Our tools are supposed to
+ * work on "correct" C programs (i.e. those that cc -ansi would compile without
+ * warnings). Of course, a type checker on the parse tree can report some errors
+ * as syntax errors.
+ *)
+
+(* About function definitions:
+ * The order of the paramaters will always come from the FuncDecr thing 
+ * The types of the parameter may come from the second declaration list  (in K&R style)
+ *)
+
+open ParseTree (* PortingHelp *)
+
+structure HX = ParseTreeExt (* HANCOCK *)
+
+fun markExternalDecl srcMap (d,left,right) = 
+    MARKexternalDecl(SourceMap.location srcMap (left,right), d)
+
+fun markDeclaration srcMap (d,left,right) = 
+    MARKdeclaration(SourceMap.location srcMap (left,right), d)
+
+fun markDeclarator srcMap (d,left,right) = 
+    MARKdeclarator(SourceMap.location srcMap (left,right), d)
+
+fun markStatement srcMap (s,left,right) = 
+    MARKstatement(SourceMap.location srcMap (left, right), s)
+
+fun markExpression srcMap (s,left,right) = 
+    MARKexpression(SourceMap.location srcMap (left, right), s)
+
+val unknown = {storage=[],qualifiers=[],specifiers=[]}:decltype
+
+(* this code duplicated in BuildAst in function processDeclarator *)
+fun ctypeDecrToTypeName (typ as {qualifiers, specifiers},decr) =
+      let fun mkTyp spc = {qualifiers=[], specifiers=[spc]}
+	  fun addQual q = {qualifiers=q::qualifiers, specifiers=specifiers}
+       in case decr
+	    of VarDecr x => (typ,SOME x)
+	     | PointerDecr x =>
+		ctypeDecrToTypeName (mkTyp (Pointer typ),x)
+	     | ArrayDecr (x,sz) =>
+		ctypeDecrToTypeName (mkTyp (Array (sz,typ)),x)
+	     | FuncDecr (x,lst) =>
+		ctypeDecrToTypeName (mkTyp (Function{retType=typ,params=lst}),x)
+	     | QualDecr (q,decr) =>
+		ctypeDecrToTypeName (addQual q, decr)
+	     | EmptyDecr => (typ, NONE)
+	     | EllipsesDecr => (mkTyp Ellipses, SOME("**ellipses**"))
+	     (* HANCOCK *)
+	     | DecrExt (HX.HWindow (x,sz,offset)) =>
+		ctypeDecrToTypeName (mkTyp (SpecExt (HX.HWindowSpec (sz,offset,typ))),x)
+	     | DecrExt _ => (typ, NONE)  (* should call decr extension? *)
+	     | MARKdeclarator(loc, decr) => ctypeDecrToTypeName(typ, decr)
+      end
+
+fun dclr2str dcl = 
+  (case ctypeDecrToTypeName ({qualifiers=[],specifiers=[]}, dcl)
+     of (_,SOME s) => s
+      | (_,NONE) => "")
+
+fun combineDecltypes ( {qualifiers=q1,storage=st1,specifiers=sp1}
+	           , {qualifiers=q2,storage=st2,specifiers=sp2}
+	           ) =
+  {qualifiers=q1@q2,storage=st1@st2,specifiers=sp1@sp2}  (* @ ok *)
+
+fun applyPointer (PointerDecr x,rest) = PointerDecr (applyPointer (x,rest))
+  | applyPointer (QualDecr (q,x),rest) = QualDecr (q, applyPointer (x,rest))
+  | applyPointer (EmptyDecr, rest) = rest
+  | applyPointer (_, rest) = rest  
+    (* NCH/DBM[6/14/99]: this case can never occur  *)
+
+fun addStorage(st, {qualifiers,storage,specifiers}) =
+        {qualifiers=qualifiers,storage=st::storage,specifiers=specifiers}
+
+fun addQualifiers(qs, {qualifiers,storage,specifiers}) =
+	{qualifiers=qs@qualifiers,storage=storage,specifiers=specifiers} (* @ ok *)
+
+fun addQualifier(q, {qualifiers,storage,specifiers}) =
+	{qualifiers=q::qualifiers,storage=storage,specifiers=specifiers}
+
+fun addSpecifier(sp, {qualifiers,storage,specifiers}) =
+	{qualifiers=qualifiers,storage=storage,specifiers=sp::specifiers}
+
+val addAll = combineDecltypes
+
+fun loopQd (q::rst, acc) = loopQd(rst, QualDecr(q, acc))
+  | loopQd (nil, acc) = acc
+
+fun mkCtype typ = typ
+
+(* DBM: major kludge, using TYPEDEF as storage class *)
+fun insertDeclNames ({storage,...}: decltype, idl) =
+    case storage
+      of [TYPEDEF] =>  List.app (fn x as (dcl,_) => TypeDefs.addTdef (dclr2str dcl)) idl
+       | _ => List.app (fn x as (dcl,_) => TypeDefs.addNoTdef (dclr2str dcl)) idl
+
+fun insertFuncName dcl =
+  let
+    val name = dclr2str dcl
+  in
+    TypeDefs.addNoTdef name
+  end
+
+fun insertFuncParams (FuncDecr (_,params)) : unit = 
+     let
+       fun getName (ct, dclr) = dclr2str dclr
+       val names = map getName params
+     in
+       List.app TypeDefs.addNoTdef names
+     end
+  | insertFuncParams (ArrayDecr(dcl,_)) = insertFuncParams dcl
+  | insertFuncParams (PointerDecr dcl) = insertFuncParams dcl
+  | insertFuncParams (DecrExt (HX.HWindow (dcl,_,_))) = insertFuncParams dcl
+  | insertFuncParams _ = ()  (* this is actually an error, but it will be caught in
+		              * BuildAst when processing a PT.FunctionDef *)
+
+abstype 'a seq = SEQ of 'a list
+with val emptySeq = SEQ nil
+     fun singletonSeq x = SEQ[x]
+     fun addToSeq(x, SEQ yl) = SEQ(x :: yl)  (* add to end of sequence! *)
+  (* fun addListToEnd(xl, yl) = SEQ((List.rev xl) @ yl) *)
+     fun addOptToEnd(NONE, yl) = yl
+       | addOptToEnd(SOME x, SEQ yl) = SEQ(x :: yl)
+     fun seqToList(SEQ yl) = List.rev yl
+end
+
+(* HANCOCK: start helper functions *)
+exception MultipleOccurences
+exception UnexpectedStorage
+exception UnexpectedDeclarator
+
+datatype hRecordDecl = 
+    PlainDecl of (ctype * ctype option * (declarator list))
+  | ConversionDecl of (string * string * statement)
+
+fun pickSome (NONE,NONE) = NONE
+  | pickSome (SOME x,NONE) = SOME x
+  | pickSome (NONE,SOME x) = SOME x
+  | pickSome (_,_) = (raise MultipleOccurences)
+    
+
+fun dtToCT { specifiers = s, qualifiers = q, storage = st } =
+    (* if st <> [] then (raise UnexpectedStorage)
+    else *) 
+	{ specifiers = s, qualifiers = q }
+
+val makeTypeName = TypeDefs.addTdef
+
+fun wrapBinop (x,y,z) = (ExprExt (HX.HAssign(Binop(x,y,z))))
+
+fun convParam (dt,dclr) = (dtToCT dt,dclr)
+
+fun extractFuncParams (FuncDecr (_,params)) = map convParam params
+  | extractFuncParams (ArrayDecr(dcl,_)) = extractFuncParams dcl
+  | extractFuncParams (DecrExt (HX.HWindow (dcl,_,_))) = extractFuncParams dcl
+  | extractFuncParams (PointerDecr dcl) = extractFuncParams dcl
+  | extractFuncParams _ = (raise UnexpectedDeclarator)
+
+fun insertParams params =
+    let
+	fun getName (ct, dclr) = dclr2str dclr
+	val names = map getName params
+    in
+	List.app TypeDefs.addNoTdef names
+    end
+
+val dummyCtype = { specifiers = [], qualifiers = [] }
+val dummyExpr = EmptyExpr
+
+(* STATE : recordName stores the type names of the record currently being processed if any. *)
+val recordNames : (string option * string * string) ref = ref (NONE,"","")
+
+fun flush () = (TextIO.flushOut TextIO.stdOut)
+val print = (fn s => (print s; flush ()))
+
+type exp = expression
+
+(* HANCOCK: end *)
+%%
+
+%header (functor LrValsFun(structure Token : TOKEN 
+			    ))
+
+%term 
+ 	  EOF 
+	| COLON | SEMICOLON | LPAREN | RPAREN | LCURLY | RCURLY 
+	| LBRACE | RBRACE | DOT 
+	| COMMA | QUESTION | PERCENT | AMP | BAR | TILDE | DIVIDE | PLUS
+	| MINUS | HAT | BANG | TIMES
+	| INC | DEC | ARROW
+	| ID of string  
+	| EQUALS | PLUSEQUALS | MINUSEQUALS | XOREQUALS | MODEQUALS 
+	| TIMESEQUALS | DIVEQUALS | OREQUALS  | ANDEQUALS | LSHIFTEQUALS 
+	| RSHIFTEQUALS
+	| LTE | GTE | LT | GT | EQ | NEQ | OR | AND | LSHIFT | RSHIFT
+	| DECNUM of IntInf.int
+        | REALNUM of real 
+	| STRING of string 
+	| CCONST of IntInf.int
+	| EXTERN | AUTO | STATIC | REGISTER | CONST | VOLATILE
+	| IF | THEN | ELSE
+	| FOR | DO |  SWITCH | CASE | DEFAULT
+	| WHILE | RETURN 
+	| BREAK | CONTINUE | GOTO
+	| CHAR | DOUBLE | ENUM | FLOAT | INT | LONG | SHORT
+        | FRACTIONAL | SATURATE  | IN                          (* D *)
+	| STRUCT | UNION | UNSIGNED | SIGNED
+	| VOID | SIZEOF | TYPEDEF | UNARY
+	| ELIPSIS
+	| TYPE_NAME of string
+ 	| PARALLEL | SEQUENTIAL | COUNT | REDUCE | WHERE | DEPENDENCY(*D*)
+ 	| ASSOCIATIVE | TO | KWAND                                        (*D*)
+	| LTEG | LCOLON | RCOLON | LBCOLON | RBCOLON | LPCOLON | RPCOLON |DOLLAR | CEC (*HANCOCK*)
+        | AT | RANGE | MAP | VALUE | STREAM | DOTDOT | CPC
+        | ITERATE | FILTEREDBY | SORTEDBY | SORTED | WITHEVENTS | OVER 
+        | INITIALLY | PICKLE
+	| NEW | EXISTS | DIRECTORY | COMPRESS | DECOMPRESS | VIEW | SPLIT
+        | EVENT | SIG_MAIN | COLONCOLON | MUNION
+	| CSC | CMC | SLASH (* HANCOCK *) 
+	| DIRECTIVE of string
+
+%nonterm 
+	translationUnit of externalDecl list
+	| tu of externalDecl seq
+	| statement of statement
+	| ostatementlist of statement list
+
+	| statementlist of statement seq
+	| compoundStatement of statement
+	| expr of expression
+	| constexpr of expression (* HANCOCK *)
+	| opExpr of expression
+	| exprWComma of expression
+	| unaryOperator of operator
+	| argumentExprList of expression seq
+	| trailingComma of bool
+	| enumeratorList of (string * expression) seq
+	| enumerator of (string * expression)
+	| abstractDeclarator of declarator
+	| directAbstractDeclarator of declarator
+	| initDeclarator of (declarator * expression)
+	| notypeInitDeclarator of (declarator * expression)
+	| initDeclaratorList of (declarator * expression) seq
+	| notypeInitDeclaratorList of (declarator * expression) seq
+	| pointer of declarator
+	| declarator of declarator
+        | aftertypeDeclarator of declarator
+        | notypeDeclarator of declarator
+        | parmDeclarator of declarator
+	| aftertypeDirectDeclarator of declarator
+	| notypeDirectDeclarator of declarator
+        | parmDirectDeclarator of declarator
+	| declarationSpecifiers of decltype 
+	| declarationModifiers of decltype
+        | reservedDeclarationSpecifier of decltype
+        | specifierQualifierReserved of ctype
+	| reservedSpecifierQualifiers of ctype
+	| initializer of expression
+	| initializerList of expression seq
+	| storageClassSpecifier of storage
+	| typeName of ctype
+	| typeSpecifier of specifier
+        | typeSpecifierReserved of specifier
+	| typeQualifier of qualifier
+        | typeQualifierList of qualifier list
+	| specifierQualifierList of ctype
+	| enumSpecifier of specifier
+	| structOrUnionSpecifier of specifier
+	| fDefDeclaration of (decltype * declarator)
+	| declarationList of declaration seq
+	| identlist of string seq
+	| functionDefinition of externalDecl
+	| declaration of declaration
+	| declaration1 of declaration
+	| externalDeclaration of externalDecl option
+	| parameterList of (decltype * declarator) seq
+	| parameterTypeList of (decltype * declarator) list
+	| parameterDeclaration of (decltype * declarator)
+	| structOrUnion of bool
+	| structDeclarator of (declarator * expression)
+	| notypeStructDeclarator of (declarator * expression)
+	| structDeclaratorList of (declarator * expression) seq
+	| notypeStructDeclaratorList of (declarator * expression) seq
+	| structDeclarationList of (ctype * (declarator * expression) list) seq
+	| structDeclaration of (ctype * (declarator * expression) list)
+	| pushScope of unit
+        | popScope of unit
+        | strings of string
+(* HANCOCK: start *)
+	| hName of string
+	| hNameOpt of string option
+	| hPath of string list
+	| hPathOpt of string list
+	| hDeclaratorList of declarator list
+	| hDeclarators of declarator list
+	| hRange of externalDecl
+	| hRecordArgSetup of unit
+	| hRecordArgClear of unit
+	| hRecordCoercion of statement
+        | hRecordDecl of hRecordDecl
+        | hRecordDeclList of (((string * string * statement) list) *
+			      ((ctype * ctype option * (declarator list)) list)
+			      )
+	| hRecordHead of string option * string * string
+	| hRecordBody of (((string * string * statement) list) *
+			  ((ctype * ctype option * (declarator list)) list)
+			  )
+	| hRecord of externalDecl
+        | hTyParamDeclaration of (ctype * declarator)
+        | hTyParamList of (ctype * declarator) list
+        | hTyParams of (ctype * declarator) list
+        | hCurryParamList of expression list
+        | hCurryParams of expression list
+	| hPickle of externalDecl
+	| hMap of externalDecl
+        | hMapDeclList of (string option      *
+			   ((ctype, expression) HX.HKey option * 
+			    ctype option      * 
+			    (expression * expression) option * 
+			    expression HX.HMapPApp option * 
+			    expression HX.HMapPApp option * 
+			    expression HX.HMapPApp option)  
+			   )
+        | hMapDecl of (bool*((ctype, expression) HX.HKey option * 
+			     ctype option * 
+			    (expression * expression) option *
+			     expression HX.HMapPApp option *              
+		             expression HX.HMapPApp option *              
+			     expression HX.HMapPApp option))              
+	| hStream of externalDecl
+	| hIteratesClause of ((exp * exp option * exp option) option * 
+	                      exp HX.HFilter option * string list option * 
+	                      exp HX.HDetect option)
+	| hIteratesClauses of (string option * 
+			       ((exp * exp option * exp option) option *
+				exp HX.HFilter option * string list option * 
+				exp HX.HDetect option))
+	| hIterates of (ctype,declarator,expression,statement) HX.HIterates
+	| opEventParam of (ctype * declarator) option
+	| hEvent of (ctype, declarator, statement) HX.HEvent
+	| hEvents of (ctype, declarator, statement) HX.HEvent list
+	| hMode of specifier
+	| hSigMsg of string option
+	| hConstexpr of expression
+	| hSigParamTail of (expression option * 
+			    (string*bool*(string option)) option)
+        | hSigParamTails of (string option *
+			     (expression option * 
+			      (string*bool*(string option)) option))
+	| hSigParam of (ctype,declarator,expression) HX.HSigParam
+	| hSigParamList of (ctype,declarator,expression) HX.HSigParam list
+	| hSigParams of (ctype,declarator,expression) HX.HSigParam list
+	| hSigMainRetType of specifier list
+	| hSigMainPrefix of specifier list
+	| hSigMain of externalDecl
+	| hSortList of string list 
+(*	| opBody of statement *)
+	| opDeclarationList of declaration list
+
+	| hDirectory of externalDecl
+	| hDirMemberList of (ctype, declarator, expression) HX.HDirMember list
+	| hDirMember     of (ctype, declarator, expression) HX.HDirMember
+	| hDirDeclaration of (ctype * ((declarator * expression) list))
+	| hDirDeclaratorList       of (declarator * expression) list
+	| hNoTypeDirDeclaratorList of (declarator * expression) list
+	| hDirDeclarator       of declarator * expression
+	| hNoTypeDirDeclarator of declarator * expression
+
+	| hEventTyElt  of  ctype * declarator
+	| hEventTyElts of (ctype * declarator) list
+	| hEventTy of externalDecl
+	| hEventElts of (string * expression option) list
+(* HANCOCK: end *)
+
+
+%pos int
+%verbose
+%pure
+%start translationUnit
+%eop EOF 
+%noshift EOF
+%keyword QUESTION IF THEN ELSE FOR DO SWITCH CASE DEFAULT WHILE RETURN BREAK CONTINUE GOTO
+%subst TYPE_NAME for ID
+%value TYPE_NAME(Error.hint "Likely cause: missing typedef declaration.\n"; "bogus")
+
+%arg (srcMap) : SourceMap.sourcemap
+
+%name C
+
+%left COMMA
+%right EQUALS PLUSEQUALS MINUSEQUALS TIMESEQUALS DIVEQUALS MODEQUALS XOREQUALS OREQUALS ANDEQUALS LSHIFTEQUALS RSHIFTEQUALS
+%right QUESTION
+%left OR
+%left AND
+%left BAR
+%left HAT
+%left AMP
+%left EQ NEQ
+%left LT GT LTE GTE
+%left LSHIFT RSHIFT
+%left PLUS MINUS CPC CMC CSC SLASH
+%left TIMES DIVIDE PERCENT
+%right UNARY
+%right INC DEC SIZEOF
+%left AT
+%left LBRACE LPAREN ARROW DOT
+
+(* HANCOCK *)
+%left LCOLON DOLLAR
+
+%%
+
+translationUnit:  
+	tu			(seqToList tu)
+
+tu:
+					(emptySeq)
+	| tu externalDeclaration	(addOptToEnd(externalDeclaration, tu))
+
+externalDeclaration:
+	  declaration			(SOME(markExternalDecl srcMap (ExternalDecl declaration,
+						                       declarationleft,
+								       declarationright)))
+	| SEMICOLON			(NONE)
+	| functionDefinition		(SOME(markExternalDecl srcMap (functionDefinition,
+						   	               functionDefinitionleft,
+							               functionDefinitionright)))
+(* HANCOCK: start external declarations *)
+	| DIRECTIVE                     (SOME(Directive DIRECTIVE)) (* HANCOCK *)
+        | hRange SEMICOLON          (SOME(markExternalDecl srcMap (hRange,hRangeleft,hRangeright)))
+	| hRecord RCURLY            (SOME(markExternalDecl srcMap (hRecord, hRecordleft, RCURLYright)))
+        | hPickle RCURLY            (SOME(markExternalDecl srcMap (hPickle,hPickleleft,RCURLYright)))
+        | hMap RCURLY               (SOME(markExternalDecl srcMap (hMap,hMapleft,RCURLYright)))
+	| hStream RCURLY            (SOME(markExternalDecl srcMap (hStream,hStreamleft,RCURLYright)))
+	| hSigMain                  (SOME(markExternalDecl srcMap (hSigMain,hSigMainleft,hSigMainright))) 
+        | hDirectory RCURLY         (SOME(markExternalDecl srcMap (hDirectory,hDirectoryleft,RCURLYright)))
+	| hEventTy RBCOLON          (SOME(markExternalDecl srcMap (hEventTy,hEventTyleft,RBCOLONright)))   
+(* HANCOCK end *)
+
+statement:
+	FOR LPAREN opExpr SEMICOLON opExpr SEMICOLON opExpr RPAREN statement
+					(markStatement srcMap (For(opExpr1,opExpr2,opExpr3,statement),
+							FORleft, statementright))
+	| WHILE LPAREN exprWComma RPAREN statement
+					(markStatement srcMap (While(exprWComma,statement),
+							WHILEleft, statementright))
+	| SWITCH LPAREN exprWComma RPAREN statement
+					(markStatement srcMap (Switch(exprWComma,statement),
+							SWITCHleft, statementright))
+	| DO statement WHILE LPAREN exprWComma RPAREN SEMICOLON
+					(markStatement srcMap (Do(exprWComma,statement),
+							DOleft, SEMICOLONright))
+	| BREAK SEMICOLON		(markStatement srcMap (Break, 
+							BREAKleft, SEMICOLONright))
+	| CONTINUE SEMICOLON		(markStatement srcMap (Continue, 
+							CONTINUEleft, SEMICOLONright))
+	| RETURN opExpr SEMICOLON	(markStatement srcMap (Return(opExpr), 
+							RETURNleft, SEMICOLONright))
+	| GOTO ID SEMICOLON		(markStatement srcMap (Goto(ID), 
+							GOTOleft, SEMICOLONright))
+	| compoundStatement		(compoundStatement)
+	| ID COLON statement		(markStatement srcMap (Labeled(ID,statement),
+							IDleft,statementright))
+	| DEFAULT COLON statement	(markStatement srcMap (DefaultLabel(statement),
+							DEFAULTleft, statementright))
+	| CASE exprWComma COLON statement		
+					(markStatement srcMap (CaseLabel(exprWComma,statement),
+							CASEleft, statementright))
+	| IF LPAREN exprWComma RPAREN statement
+					(markStatement srcMap (IfThen(exprWComma,statement),
+							IFleft, statementright))
+	| IF LPAREN exprWComma RPAREN statement ELSE statement
+					(markStatement srcMap (IfThenElse(exprWComma,statement1,statement2),
+							IFleft,
+							statement2right))
+        | exprWComma SEMICOLON	(markStatement srcMap (Expr(exprWComma),
+							exprWCommaleft, SEMICOLONright))
+	| SEMICOLON		        (markStatement srcMap (Expr(EmptyExpr),
+							SEMICOLONleft,
+	SEMICOLONright))
+(* HANCOCK start *)
+        | expr CEC expr SEMICOLON      (markStatement srcMap 
+					(StatExt (HX.HMapCopy(expr1,expr2)),
+						  expr1left,SEMICOLONright))
+        | hIterates                    (markStatement srcMap
+					(StatExt (HX.HIterate(hIterates)),
+					 hIteratesleft,hIteratesright))
+(* HANCOCK end *)
+
+declaration:
+          declaration1 SEMICOLON        (declaration1)
+
+declaration1:
+	  declarationSpecifiers
+		(insertDeclNames (declarationSpecifiers, []);
+		 markDeclaration srcMap
+		   (Declaration(declarationSpecifiers, []), 
+		    declarationSpecifiersleft, declarationSpecifiersright))
+
+	| declarationSpecifiers initDeclaratorList
+	        (let val decl = (declarationSpecifiers, seqToList initDeclaratorList)
+		  in insertDeclNames decl;
+		     markDeclaration srcMap
+		       (Declaration decl, declarationSpecifiersleft, initDeclaratorListright)
+	         end)
+
+        | declarationModifiers notypeInitDeclaratorList
+	        (let val decl = (declarationModifiers, seqToList notypeInitDeclaratorList)
+		  in insertDeclNames decl;
+		     markDeclaration srcMap
+		       (Declaration decl, declarationModifiersleft, notypeInitDeclaratorListright)
+	         end)
+
+
+ostatementlist:	 
+	statementlist 			(seqToList statementlist)
+	| 				([])
+
+statementlist:
+	statement			(singletonSeq statement)
+	| statementlist statement	(addToSeq(statement, statementlist))
+
+
+(* original code: changed for "let" statements in D *)
+(* HANCOCK : Added bogus wrapper around compound statements so that we *)
+(* can float declarations of temporary variables to the level we need *)
+(* them at. *)
+
+
+compoundStatement: 
+	  LCURLY pushScope declarationList ostatementlist popScope RCURLY
+					(StatExt(HX.HCompound
+	  (Compound ((map Decl (seqToList declarationList)) @ ostatementlist))))
+	| LCURLY ostatementlist RCURLY
+					(StatExt(HX.HCompound (Compound (ostatementlist))))
+(* *)
+
+
+
+
+
+unaryOperator: 
+	AMP	(AddrOf)
+	| TIMES (Star)
+	| PLUS  (Uplus)
+	| MINUS (Negate)
+	| TILDE (BitNot)
+	| BANG  (Not)
+
+expr:
+	expr QUESTION expr COLON expr %prec QUESTION (markExpression srcMap (QuestionColon(expr1,expr2,expr3),expr1left,expr3right))
+
+(* HANCOCK: We need a hook into assignment statements to process the LHS 
+correctly -- both for typechecking and for generating code.  Consequently we 
+wrap every one of these with a dummy expression HAssign.  I don't think we need 
+the markExpressions.  We'll see. *)
+        | expr PLUSEQUALS expr  	(markExpression srcMap (wrapBinop(PlusAssign,expr1,expr2),expr1left,expr2right))
+        | expr MINUSEQUALS expr		(markExpression srcMap (wrapBinop(MinusAssign,expr1,expr2),expr1left,expr2right))
+        | expr TIMESEQUALS expr		(markExpression srcMap (wrapBinop(TimesAssign,expr1,expr2),expr1left,expr2right))
+        | expr DIVEQUALS expr		(markExpression srcMap (wrapBinop(DivAssign,expr1,expr2),expr1left,expr2right))
+        | expr MODEQUALS expr		(markExpression srcMap (wrapBinop(ModAssign,expr1,expr2),expr1left,expr2right))
+        | expr XOREQUALS expr		(markExpression srcMap (wrapBinop(XorAssign,expr1,expr2),expr1left,expr2right))
+        | expr OREQUALS expr		(markExpression srcMap (wrapBinop(OrAssign,expr1,expr2),expr1left,expr2right))
+        | expr ANDEQUALS expr		(markExpression srcMap (wrapBinop(AndAssign,expr1,expr2),expr1left,expr2right))
+        | expr LSHIFTEQUALS expr	(markExpression srcMap (wrapBinop(LshiftAssign,expr1,expr2),expr1left,expr2right))
+        | expr RSHIFTEQUALS expr	(markExpression srcMap (wrapBinop(RshiftAssign,expr1,expr2),expr1left,expr2right))
+	| expr EQUALS expr 		(markExpression srcMap (wrapBinop(Assign,expr1,expr2),expr1left,expr2right))
+        | expr OR expr  		(markExpression srcMap (Binop(Or,expr1,expr2),expr1left,expr2right))
+        | expr AND expr 		(markExpression srcMap (Binop(And,expr1,expr2),expr1left,expr2right))
+        | expr BAR expr 		(markExpression srcMap (Binop(BitOr,expr1,expr2),expr1left,expr2right))
+        | expr HAT expr 		(markExpression srcMap (Binop(BitXor,expr1,expr2),expr1left,expr2right))
+        | expr AMP expr 		(markExpression srcMap (Binop(BitAnd,expr1,expr2),expr1left,expr2right))
+        | expr EQ expr 			(markExpression srcMap (Binop(Eq,expr1,expr2),expr1left,expr2right))
+        | expr NEQ expr 		(markExpression srcMap (Binop(Neq,expr1,expr2),expr1left,expr2right))
+        | expr LT expr 			(markExpression srcMap (Binop(Lt,expr1,expr2),expr1left,expr2right))
+        | expr GT expr 			(markExpression srcMap (Binop(Gt,expr1,expr2),expr1left,expr2right))
+        | expr LTE expr			(markExpression srcMap (Binop(Lte,expr1,expr2),expr1left,expr2right))
+        | expr GTE expr			(markExpression srcMap (Binop(Gte,expr1,expr2),expr1left,expr2right))
+        | expr LSHIFT expr		(markExpression srcMap (Binop(Lshift,expr1,expr2),expr1left,expr2right))
+        | expr RSHIFT expr		(markExpression srcMap (Binop(Rshift,expr1,expr2),expr1left,expr2right))
+        | expr PLUS expr		(markExpression srcMap (Binop(Plus,expr1,expr2),expr1left,expr2right))
+        | expr MINUS expr		(markExpression srcMap (Binop(Minus,expr1,expr2),expr1left,expr2right))
+        | expr TIMES expr		(markExpression srcMap (Binop(Times,expr1,expr2),expr1left,expr2right))
+        | expr DIVIDE expr		(markExpression srcMap (Binop(Divide,expr1,expr2),expr1left,expr2right))
+        | expr PERCENT expr		(markExpression srcMap (Binop(Mod,expr1,expr2),expr1left,expr2right))
+	| expr INC %prec INC		(markExpression srcMap (Unop(PostInc,expr),exprleft,INCright))
+	| expr DEC %prec INC		(markExpression srcMap (Unop(PostDec,expr),exprleft,DECright))
+	| INC expr %prec INC		(markExpression srcMap (Unop(PreInc,expr),INCleft,exprright))
+	| DEC expr %prec INC	 	(markExpression srcMap (Unop(PreDec,expr),DECleft,exprright))
+	| unaryOperator expr  %prec UNARY (markExpression srcMap (Unop(unaryOperator,expr),unaryOperatorleft,exprright))
+	| SIZEOF expr  			(markExpression srcMap (Unop(Sizeof,expr),SIZEOFleft,exprright))
+	| LPAREN typeName RPAREN expr %prec INC 
+					(markExpression srcMap (Cast (typeName,expr),LPARENleft,exprright))
+	| SIZEOF LPAREN typeName RPAREN %prec SIZEOF 
+					(markExpression srcMap (Unop(SizeofType typeName,EmptyExpr),SIZEOFleft,RPARENright))
+	| expr LBRACE exprWComma RBRACE
+					(markExpression srcMap (Binop(Sub,expr,exprWComma),exprleft,RBRACEright))
+
+
+
+	| expr LPAREN RPAREN		(markExpression srcMap (Call(expr,[]),exprleft,RPARENright))
+	| expr LPAREN argumentExprList RPAREN
+					(markExpression srcMap (Call(expr, seqToList argumentExprList),exprleft,RPARENright))
+(* HANCOCK: start *)
+(* HANCOCK - wrap the dot and the arrow.*)
+	| expr DOT hName		(markExpression srcMap (Binop(OperatorExt(HX.HDot),expr,Id(hName)),exprleft,hNameright))
+	| expr ARROW hName		(markExpression srcMap (Binop(OperatorExt(HX.HArrow),expr,Id(hName)),exprleft,hNameright))
+	| expr DOLLAR TYPE_NAME         (markExpression srcMap (Binop(OperatorExt(HX.HView),expr,Id(TYPE_NAME)),
+					 exprleft,TYPE_NAMEright))
+	| expr LCOLON expr RCOLON       (markExpression srcMap (Binop(OperatorExt(HX.HIndex),expr1,expr2),
+					 exprleft,RCOLONright)) 
+	| LBCOLON hEventElts trailingComma RBCOLON 
+	    (markExpression srcMap 
+		(ExprExt (HX.HEventC(hEventElts)),
+		 LBCOLONleft,
+		 RBCOLONright))
+	| LPAREN typeName RPAREN LBCOLON RBCOLON %prec INC 
+	    (markExpression srcMap (ExprExt
+	   	(HX.HEventEmpty typeName),LPARENleft,RBCOLONright))
+	| expr AT expr 
+	    (markExpression srcMap (Binop(OperatorExt(HX.HMember),expr1,expr2),
+				    expr1left,
+				    expr2right))
+        | expr CPC expr
+	    (markExpression srcMap (Binop(OperatorExt(HX.HUnion),expr1,expr2),
+				    expr1left,
+				    expr2right))
+        | expr CMC expr
+	    (markExpression srcMap (Binop(OperatorExt(HX.HDiff),expr1,expr2),
+				    expr1left,
+				    expr2right))
+        | expr CSC hName
+	    (markExpression srcMap (Binop(OperatorExt(HX.HRemove),expr,
+				          Id(hName)),
+				    exprleft,
+				    hNameright))
+	| expr AT LCOLON expr RCOLON
+	    (markExpression srcMap (Binop(OperatorExt(HX.HMapMember),expr1,expr2),
+				    expr1left,
+				    RCOLONright))
+	| expr SLASH LCOLON expr RCOLON
+	    (markExpression srcMap (Binop(OperatorExt(HX.HMapRemove),expr1,expr2),
+				    expr1left,
+				    RCOLONright))
+
+	| expr QUESTION LCOLON expr RCOLON
+	    (markExpression srcMap (Binop(OperatorExt(HX.HMapTestKey),expr1,expr2),
+				    expr1left,
+				    RCOLONright))
+
+
+(* HANCOCK: end *)
+	| LPAREN exprWComma RPAREN	(markExpression srcMap (exprWComma,LPARENleft,RPARENright))
+        | constexpr                     ( constexpr )
+
+
+constexpr:
+	  DECNUM			(markExpression srcMap (IntConst DECNUM,DECNUMleft,DECNUMright))
+        | REALNUM                       (markExpression srcMap (RealConst REALNUM, REALNUMleft,REALNUMright))
+	| CCONST			(markExpression srcMap (IntConst CCONST, CCONSTleft,CCONSTright))
+	| ID				(markExpression srcMap (Id(ID), IDleft, IDright))
+        | strings                       (markExpression srcMap (String(strings),stringsleft,stringsright))
+
+
+strings:  STRING                        (STRING)
+	| STRING strings		(STRING ^ strings)
+
+
+
+exprWComma:
+	  expr 				(expr)
+	| exprWComma COMMA expr 	(markExpression srcMap (Binop(Comma,exprWComma,expr),exprWCommaleft,exprright))
+
+opExpr:					(EmptyExpr)
+	| exprWComma			(exprWComma)
+
+
+argumentExprList:
+	 expr				(singletonSeq expr)
+	| argumentExprList COMMA expr   (addToSeq(expr, argumentExprList))
+
+typeName:
+	  specifierQualifierList  	(specifierQualifierList)
+	| specifierQualifierList abstractDeclarator
+					(#1 (ctypeDecrToTypeName (specifierQualifierList, abstractDeclarator)))
+
+declarationSpecifiers:
+          typeSpecifier reservedDeclarationSpecifier
+                                        (addSpecifier (typeSpecifier,
+						        reservedDeclarationSpecifier))
+        | declarationModifiers typeSpecifier reservedDeclarationSpecifier
+                                        (addAll (declarationModifiers,
+                                                  addSpecifier (typeSpecifier,
+							         reservedDeclarationSpecifier)))
+
+reservedDeclarationSpecifier:
+                                        (unknown)
+        | reservedDeclarationSpecifier specifierQualifierReserved
+                                        (let val {qualifiers,specifiers} = specifierQualifierReserved
+					     val decltype = {qualifiers=qualifiers,specifiers=specifiers,storage=[]}
+	   				 in addAll (decltype, reservedDeclarationSpecifier) end )
+        | reservedDeclarationSpecifier storageClassSpecifier
+                                        (addStorage (storageClassSpecifier,
+                                                      reservedDeclarationSpecifier))
+
+specifierQualifierReserved:
+          typeSpecifierReserved       ({qualifiers=[],specifiers=[typeSpecifierReserved]})
+        | typeQualifier                ({qualifiers=[typeQualifier],specifiers=[]})
+        | structOrUnionSpecifier     ({qualifiers=[],specifiers=[structOrUnionSpecifier]})
+        | enumSpecifier                ({qualifiers=[],specifiers=[enumSpecifier]})
+(* HANCOCK *)
+	| hMode                      ({qualifiers=[],specifiers=[hMode]})
+
+declarationModifiers:
+          storageClassSpecifier
+                                        ({storage = [storageClassSpecifier],
+					  qualifiers = [],
+					  specifiers = []})
+        | declarationModifiers storageClassSpecifier
+                                        (addStorage(storageClassSpecifier,declarationModifiers))
+        | typeQualifier
+                                        ({specifiers = [],
+	 				  storage = [], 
+					  qualifiers = [typeQualifier]})
+        | declarationModifiers typeQualifier
+                                        (addQualifier(typeQualifier, declarationModifiers))
+(* HANCOCK *)
+	| hMode                         ({specifiers = [hMode],
+       					  storage = [],
+					  qualifiers = []})
+	| declarationModifiers hMode
+					(addSpecifier(hMode,declarationModifiers))
+
+specifierQualifierList:
+          typeSpecifier reservedSpecifierQualifiers
+                                        (let val {specifiers, qualifiers} = reservedSpecifierQualifiers
+	                                 in {specifiers=typeSpecifier::specifiers,qualifiers=qualifiers} end)
+			
+        | typeQualifierList typeSpecifier reservedSpecifierQualifiers
+					(let val {specifiers, qualifiers} = reservedSpecifierQualifiers
+	                                 in {specifiers=typeSpecifier::specifiers
+					    ,qualifiers=typeQualifierList@qualifiers
+                                            }
+                                         end)
+(* HANCOCK: Added the mode. *)			       
+        | typeQualifierList hMode typeSpecifier reservedSpecifierQualifiers
+					(let val {specifiers, qualifiers} = reservedSpecifierQualifiers
+	                                 in {specifiers=hMode::typeSpecifier::specifiers
+					    ,qualifiers=typeQualifierList@qualifiers
+                                            }
+                                         end)
+        | hMode typeQualifierList typeSpecifier reservedSpecifierQualifiers
+					(let val {specifiers, qualifiers} = reservedSpecifierQualifiers
+	                                 in {specifiers=hMode::typeSpecifier::specifiers
+					    ,qualifiers=typeQualifierList@qualifiers
+                                            }
+                                         end)
+
+reservedSpecifierQualifiers:
+                                        ({qualifiers=[],specifiers=[]})
+        | reservedSpecifierQualifiers specifierQualifierReserved
+                                        (let val {specifiers=s1, qualifiers=q1} = reservedSpecifierQualifiers
+					     val {specifiers=s2, qualifiers=q2} = specifierQualifierReserved
+	                                 in {specifiers=s1@s2, qualifiers=q1@q2} end)
+		
+typeQualifierList:
+          typeQualifier                ([typeQualifier])
+
+	| typeQualifier typeQualifierList 
+                                        (typeQualifier::typeQualifierList)
+
+typeSpecifier:
+          typeSpecifierReserved       (typeSpecifierReserved)
+        | structOrUnionSpecifier	(structOrUnionSpecifier)
+        | enumSpecifier		(enumSpecifier)
+        | TYPE_NAME			(TypedefName TYPE_NAME)
+
+typeSpecifierReserved:
+	  VOID				(Void)
+        | CHAR 				(Char)
+        | SHORT 			(Short)
+	| INT  				(Int)
+	| LONG				(Long)
+        | FLOAT				(Float)
+	| DOUBLE			(Double)
+	| SIGNED			(Signed)
+	| UNSIGNED			(Unsigned)
+
+
+structOrUnionSpecifier:
+          structOrUnion LCURLY structDeclarationList RCURLY
+	       (Struct{isStruct=structOrUnion, tagOpt=NONE, members=seqToList structDeclarationList})
+		
+        | structOrUnion ID LCURLY structDeclarationList RCURLY
+	     (Struct{isStruct=structOrUnion, tagOpt=SOME ID, members=seqToList structDeclarationList})
+
+        | structOrUnion TYPE_NAME LCURLY structDeclarationList RCURLY
+	     (Struct{isStruct=structOrUnion, tagOpt=SOME TYPE_NAME, members=seqToList structDeclarationList})
+
+        | structOrUnion ID	 	(StructTag {isStruct=structOrUnion, name=ID})
+
+        | structOrUnion TYPE_NAME 	(StructTag {isStruct=structOrUnion, name=TYPE_NAME})
+
+	  (* humor me: consider true for struct *)
+structOrUnion:
+	  STRUCT 			(true)
+	| UNION				(false)
+
+structDeclarationList:
+	  structDeclaration		(singletonSeq structDeclaration)
+        | structDeclarationList structDeclaration
+					(addToSeq(structDeclaration, structDeclarationList))
+
+structDeclaration:
+	specifierQualifierList structDeclaratorList SEMICOLON
+					((specifierQualifierList, seqToList structDeclaratorList))
+        | typeQualifierList notypeStructDeclaratorList SEMICOLON
+                                        (let
+					    val ct = {qualifiers=typeQualifierList, specifiers=[]}
+					 in
+					   (ct, seqToList notypeStructDeclaratorList)
+					 end)
+
+structDeclaratorList:
+          structDeclarator		(singletonSeq structDeclarator)
+        | structDeclaratorList COMMA structDeclarator
+					(addToSeq(structDeclarator, structDeclaratorList))
+
+notypeStructDeclaratorList:
+          notypeStructDeclarator	(singletonSeq notypeStructDeclarator)
+        | notypeStructDeclaratorList COMMA structDeclarator
+					(addToSeq(structDeclarator, notypeStructDeclaratorList))
+
+structDeclarator:
+	  declarator			(declarator, EmptyExpr)
+	| COLON expr			(EmptyDecr, expr)
+	| declarator COLON expr		(declarator, expr)
+
+notypeStructDeclarator:
+	  notypeDeclarator		(notypeDeclarator, EmptyExpr)
+	| COLON expr			(EmptyDecr, expr)
+	| notypeDeclarator COLON expr	(notypeDeclarator, expr)
+
+typeQualifier:
+	  CONST				(CONST)
+	| VOLATILE			(VOLATILE)
+
+enumSpecifier:
+          ENUM LCURLY enumeratorList trailingComma RCURLY
+		(Enum{tagOpt=NONE, enumerators=seqToList enumeratorList, trailingComma=trailingComma})
+
+        | ENUM ID LCURLY enumeratorList trailingComma RCURLY 
+		(Enum{tagOpt=SOME(ID), enumerators=seqToList enumeratorList, trailingComma=trailingComma})
+
+	| ENUM TYPE_NAME LCURLY enumeratorList trailingComma RCURLY 
+		(Enum{tagOpt=SOME(TYPE_NAME), enumerators=seqToList enumeratorList, trailingComma=trailingComma})
+        
+        | ENUM ID			(EnumTag(ID))
+
+        | ENUM TYPE_NAME		(EnumTag(TYPE_NAME))
+
+enumeratorList:
+	  enumeratorList COMMA enumerator 
+					(addToSeq(enumerator, enumeratorList))
+	| enumerator			((TypeDefs.addNoTdef(#1(enumerator)));
+					 singletonSeq enumerator)
+
+enumerator:
+	  ID				((ID,ParseTree.EmptyExpr))
+	| ID EQUALS expr		(ID,expr)
+
+storageClassSpecifier: 
+	  EXTERN 			(EXTERN)
+        | STATIC 			(STATIC)
+	| AUTO				(AUTO)
+        | REGISTER			(REGISTER)
+	| TYPEDEF                       (TYPEDEF)
+
+trailingComma:				(false)
+	| COMMA				(true)
+ 
+initDeclaratorList:
+	  initDeclarator		(singletonSeq initDeclarator)
+	| initDeclaratorList COMMA initDeclarator
+					(addToSeq(initDeclarator, initDeclaratorList))
+
+initDeclarator:
+	  declarator			((declarator,EmptyExpr))
+	| declarator EQUALS initializer (declarator,initializer)
+
+notypeInitDeclaratorList:
+          notypeInitDeclarator         (singletonSeq notypeInitDeclarator)
+        | notypeInitDeclaratorList COMMA initDeclarator
+                                       (addToSeq(initDeclarator, notypeInitDeclaratorList))
+
+notypeInitDeclarator:
+          notypeDeclarator             ((notypeDeclarator,EmptyExpr))
+        | notypeDeclarator EQUALS initializer
+                                        (notypeDeclarator,initializer)
+
+declarator:
+          aftertypeDeclarator          (aftertypeDeclarator)
+        | notypeDeclarator             (notypeDeclarator)
+
+aftertypeDeclarator:
+	  aftertypeDirectDeclarator		(aftertypeDirectDeclarator)
+	| pointer aftertypeDirectDeclarator	(applyPointer(pointer,aftertypeDirectDeclarator))
+
+notypeDeclarator:
+          notypeDirectDeclarator      (notypeDirectDeclarator)
+        | pointer notypeDirectDeclarator 
+                                        (applyPointer(pointer, notypeDirectDeclarator))
+
+parmDeclarator:
+          parmDirectDeclarator        (parmDirectDeclarator)
+        | pointer parmDirectDeclarator
+                                        (applyPointer(pointer, parmDirectDeclarator))
+
+pointer:
+	  TIMES				(PointerDecr(EmptyDecr))
+	| TIMES typeQualifierList
+                                        (PointerDecr(loopQd(typeQualifierList,EmptyDecr)))
+	| TIMES pointer			(PointerDecr(pointer))
+	| TIMES typeQualifierList pointer
+					(PointerDecr(loopQd(typeQualifierList,pointer)))
+
+aftertypeDirectDeclarator:
+	  TYPE_NAME			(VarDecr TYPE_NAME)
+	| LPAREN aftertypeDeclarator RPAREN		
+					(aftertypeDeclarator)
+	| aftertypeDirectDeclarator  LBRACE RBRACE %prec DOT
+					(ArrayDecr (aftertypeDirectDeclarator,EmptyExpr))
+	| aftertypeDirectDeclarator LBRACE expr RBRACE %prec DOT
+					(ArrayDecr (aftertypeDirectDeclarator,expr))
+	| aftertypeDirectDeclarator LBRACE expr COLON expr RBRACE %prec DOT                            (* HANCOCK *)
+					(DecrExt (HX.HWindow (aftertypeDirectDeclarator,expr1,expr2))) 
+	| aftertypeDirectDeclarator LPCOLON argumentExprList RPCOLON %prec DOT                         (* HANCOCK *)
+					(DecrExt (HX.HParamApp (aftertypeDirectDeclarator,
+								seqToList argumentExprList)))
+	| aftertypeDirectDeclarator LPAREN parameterTypeList RPAREN		 %prec DOT
+					(FuncDecr (aftertypeDirectDeclarator,parameterTypeList))
+	| aftertypeDirectDeclarator LPAREN identlist RPAREN		%prec DOT
+					(FuncDecr (aftertypeDirectDeclarator,
+						    map (fn x => (unknown,VarDecr x)) (seqToList identlist)))
+
+notypeDirectDeclarator:
+	  ID				(VarDecr ID)
+        | hPath COLONCOLON hName        (DecrExt (HX.HScope (hPath,hName))) (* HANCOCK *)
+	| LPAREN notypeDeclarator RPAREN		
+					(notypeDeclarator)
+	| notypeDirectDeclarator LBRACE RBRACE %prec DOT
+					(ArrayDecr (notypeDirectDeclarator,EmptyExpr))
+	| notypeDirectDeclarator LBRACE expr RBRACE  %prec DOT
+					(ArrayDecr (notypeDirectDeclarator,expr))
+	| notypeDirectDeclarator LBRACE expr COLON expr RBRACE %prec DOT
+			(DecrExt (HX.HWindow (notypeDirectDeclarator,
+					      expr1, expr2)))                                       (* HANCOCK *)
+	| notypeDirectDeclarator LPCOLON argumentExprList RPCOLON %prec DOT                         (* HANCOCK *)
+			(DecrExt (HX.HParamApp (notypeDirectDeclarator,
+					        seqToList argumentExprList)))
+
+	| notypeDirectDeclarator LPAREN parameterTypeList RPAREN	 %prec DOT	
+					(FuncDecr (notypeDirectDeclarator,parameterTypeList))
+	| notypeDirectDeclarator LPAREN identlist RPAREN	 %prec DOT	
+					(FuncDecr (notypeDirectDeclarator,
+						   map (fn x => (unknown,VarDecr x)) (seqToList identlist)))
+
+parmDirectDeclarator:
+	  TYPE_NAME			(VarDecr TYPE_NAME)
+	| parmDirectDeclarator LBRACE RBRACE  %prec DOT
+					(ArrayDecr (parmDirectDeclarator,EmptyExpr))
+	| parmDirectDeclarator LBRACE expr RBRACE  %prec DOT
+					(ArrayDecr (parmDirectDeclarator,expr))
+	| parmDirectDeclarator LBRACE expr COLON expr RBRACE %prec DOT
+					(DecrExt (HX.HWindow (parmDirectDeclarator,expr1,expr2))) (* HANCOCK *)
+	| parmDirectDeclarator LPAREN parameterTypeList RPAREN	 %prec DOT	
+					(FuncDecr (parmDirectDeclarator,parameterTypeList))
+	| parmDirectDeclarator LPAREN identlist RPAREN	 %prec DOT	
+					(FuncDecr (parmDirectDeclarator,
+						    map (fn x => (unknown,VarDecr x)) (seqToList identlist)))
+
+initializer:
+	  expr				(expr)
+        | LCURLY initializerList trailingComma RCURLY
+					(markExpression srcMap (InitList(seqToList initializerList),LCURLYleft,RCURLYright))
+
+initializerList:
+          initializer			(singletonSeq initializer)
+        | initializerList COMMA initializer 
+					(addToSeq(initializer, initializerList))
+
+declarationList:
+          declaration		        (singletonSeq(markDeclaration srcMap (declaration,
+									      declarationleft,
+								              declarationright)))
+	| declarationList declaration	(addToSeq(markDeclaration srcMap (declaration,
+							            	  declarationleft,
+									  declarationright),
+						  declarationList))
+	  
+identlist:
+	  ID			(singletonSeq ID)
+	| identlist COMMA ID	(addToSeq(ID, identlist))
+
+(* Put function name in the current scope and param names in a pushed scope. *)
+fDefDeclaration:
+          notypeDeclarator
+                                        (insertFuncName(notypeDeclarator);
+					 TypeDefs.pushScope();
+					 insertFuncParams(notypeDeclarator);
+					 (unknown, notypeDeclarator))
+        | declarationSpecifiers declarator
+	                                (insertFuncName(declarator);
+					 TypeDefs.pushScope();
+					 insertFuncParams(declarator);
+					 (declarationSpecifiers, declarator))
+
+        | declarationModifiers notypeDeclarator
+	                                (insertFuncName(notypeDeclarator);
+					 TypeDefs.pushScope();
+					 insertFuncParams(notypeDeclarator);
+					 (declarationModifiers, notypeDeclarator))
+
+functionDefinition:
+ 	  fDefDeclaration compoundStatement
+                                        (TypeDefs.popScope();
+					 FunctionDef
+					    {retType = #1 fDefDeclaration,
+					     funDecr = #2 fDefDeclaration,
+                                             krParams = [],
+                                             body = compoundStatement})
+					
+	| fDefDeclaration declarationList compoundStatement
+                                        (TypeDefs.popScope();
+					 FunctionDef 
+					    {retType = #1 fDefDeclaration,
+					     funDecr = #2 fDefDeclaration,
+                                             krParams = seqToList declarationList,
+                                             body = compoundStatement})
+					
+abstractDeclarator:
+	  pointer			(applyPointer (pointer, EmptyDecr))
+	| directAbstractDeclarator	(directAbstractDeclarator)
+	| pointer directAbstractDeclarator	
+					(applyPointer(pointer, directAbstractDeclarator))
+
+directAbstractDeclarator:
+	  LPAREN abstractDeclarator RPAREN	(abstractDeclarator) 
+        | LBRACE RBRACE 			(ArrayDecr(EmptyDecr, EmptyExpr))
+        | LBRACE expr RBRACE 			(ArrayDecr(EmptyDecr, expr))
+        | LBRACE expr COLON expr RBRACE 		(DecrExt (HX.HWindow (EmptyDecr, expr1,expr2))) (* HANCOCK *)
+        | directAbstractDeclarator LBRACE RBRACE
+						(ArrayDecr (directAbstractDeclarator,EmptyExpr))
+        | directAbstractDeclarator LBRACE expr RBRACE 
+						(ArrayDecr (directAbstractDeclarator,expr))
+        | directAbstractDeclarator LBRACE expr COLON expr RBRACE 
+		                                (DecrExt (HX.HWindow (directAbstractDeclarator,expr1,expr2))) (* HANCOCK *)
+        | LPAREN parameterTypeList RPAREN	(FuncDecr (EmptyDecr, parameterTypeList))
+        | directAbstractDeclarator LPAREN parameterTypeList RPAREN 
+						(FuncDecr (directAbstractDeclarator, parameterTypeList))
+
+parameterTypeList:
+	                (nil)
+	| parameterList	(seqToList parameterList)
+        | parameterList COMMA ELIPSIS
+				(let val decltype = {specifiers=[Ellipses],qualifiers=[],storage=[]}
+	        		 in (seqToList parameterList) @ [(decltype, EllipsesDecr)] end)
+
+parameterList:
+	parameterDeclaration	
+                                (singletonSeq(#1 parameterDeclaration,
+                                              markDeclarator srcMap (#2 parameterDeclaration,
+							             parameterDeclarationleft,
+								     parameterDeclarationright)))
+        | parameterList COMMA parameterDeclaration 
+	                        (addToSeq((#1 parameterDeclaration,
+	                                           markDeclarator
+	                                            srcMap 
+                                                     (#2 parameterDeclaration,
+						      parameterDeclarationleft,
+						      parameterDeclarationright)),
+					  parameterList))
+
+(* Decided not a push and pop a scope at the parameterDeclarations, because we
+ * are not going to directly plug these names in the tdef table. If this is just
+ * a function declaration, the names here do not matter to the tdef table. If
+ * this will be part of func definition, we put all these names in tdef table at
+ * proper scope correctly, later on.
+ * Note: We miss syntax errors like int f(int foo, foo bar);, if foo was a typename
+ *)
+parameterDeclaration:
+          declarationSpecifiers  notypeDeclarator
+					((declarationSpecifiers, notypeDeclarator))
+        | declarationSpecifiers  parmDeclarator
+					((declarationSpecifiers, parmDeclarator))
+
+        | declarationSpecifiers 	(* this case can arise for function prototypes *)
+					((declarationSpecifiers, EmptyDecr))
+
+        | declarationSpecifiers  abstractDeclarator
+					((declarationSpecifiers, abstractDeclarator))
+
+        | declarationModifiers  notypeDeclarator
+                                       ((declarationModifiers, notypeDeclarator))
+
+        | declarationModifiers  abstractDeclarator
+                                       ((declarationModifiers, abstractDeclarator))
+
+pushScope:
+                                        (TypeDefs.pushScope())
+
+popScope:
+                                        (TypeDefs.popScope())
+
+
+(* HANCOCK extensions. *)
+hName:
+     ID (ID)
+   | TYPE_NAME (TYPE_NAME)
+
+hNameOpt:      (NONE)
+   | hName     (SOME hName)
+
+hPath: 
+    hName           ( [hName] )
+  | hName DOT hPath ( hName :: hPath )
+
+hPathOpt:	([])
+  | hPath       (hPath)
+
+hDeclaratorList:
+    declarator COMMA hDeclaratorList ( declarator :: hDeclaratorList )
+  | declarator  ( [declarator] )
+
+hDeclarators:
+    hDeclaratorList ( hDeclaratorList)
+  |  ( [EmptyDecr] )
+
+(* STATE : pushes the scope. 
+ The typenames for the views need to be defined as type_names.  We purposefully defined them as ID's so as to not get shift/reduce and 
+ reduce/reduce conflicts earlier.
+*)
+
+hRange:
+   RANGE hName EQUALS LBRACE expr DOTDOT expr RBRACE
+   ( makeTypeName hName;
+    ExternalDeclExt
+    (HX.Type (HX.Range {name = hName,
+                        low = expr1,
+                        high = expr2
+                        }
+              )
+     )
+    )
+
+hRecordArgSetup:
+         ( let val (n1,n2,n3) = !recordNames
+	       val _ = TypeDefs.pushScope ()
+	       val _ = case n1 of SOME h => TypeDefs.addTdef h | _ => ()
+	   in 
+	       TypeDefs.addTdef n2;
+	       TypeDefs.addTdef n3;
+	       ()
+	   end)
+
+hRecordArgClear: (TypeDefs.popScope ())
+
+(* The parser does not execute any actions until it is sure what branch it
+   is taking.  This means that setup is only executed once it finds an
+   equals or a curly brace.  If setup is put inside the equals or curly brace
+   then it will not be executed until it determines whether the declaration
+   list is optional or not. *)
+hRecordCoercion:
+    hRecordArgSetup EQUALS expr hRecordArgClear SEMICOLON ( Expr expr )
+  | hRecordArgSetup LCURLY opDeclarationList ostatementlist hRecordArgClear RCURLY
+    (StatExt(HX.HCompound (Compound ((map Decl opDeclarationList) @ ostatementlist))))
+
+
+hRecordDecl:
+    specifierQualifierList hDeclarators SEMICOLON
+     ( PlainDecl(specifierQualifierList,NONE,hDeclarators) )
+  | specifierQualifierList LTEG specifierQualifierList hDeclarators 
+     SEMICOLON
+     ( (PlainDecl(specifierQualifierList1,
+		  SOME specifierQualifierList2,
+		  hDeclarators)) )
+  | ID LPAREN ID RPAREN hRecordCoercion
+     ( ConversionDecl(ID1,ID2,hRecordCoercion) )
+
+hRecordDeclList:
+    hRecordDecl hRecordDeclList 
+    ( let val (funs,decls) = hRecordDeclList
+      in 
+	  case hRecordDecl of 
+	      PlainDecl d => (funs,d::decls)
+	    | ConversionDecl f => (f::funs,decls)
+      end)
+  |  ( ([],[]) )
+
+
+hRecordHead:
+    VIEW hNameOpt LPAREN hName COMMA hName RPAREN 
+    ( let val undef = TypeDefs.addNoTdef 
+	  val _ = case hNameOpt of SOME h => undef h | _ => ()
+      in 
+	  undef hName1;
+	  undef hName2;
+	  recordNames := (hNameOpt,hName1,hName2);
+	  (hNameOpt, hName1, hName2)
+      end)
+
+hRecordBody: 
+    LCURLY pushScope hRecordDeclList popScope ( hRecordDeclList )
+
+(* This is a total hack!
+   To avoid a shift-reduce conflict we ensure that all names in the recordHead are not TYPE_NAMES.
+   Then we only need to consider ID LPAREN ID RPAREN for conversions instead of TYPE_NAME LPAREN...
+   This counts on the parser evaluating the body of recordHead before the recordBody.
+*)
+hRecord:
+    hRecordHead hRecordBody
+    ( let val (funs,decls) = hRecordBody
+	  val (r,v1,v2) = hRecordHead
+	  fun cnv (ct1,NONE,ds) = (ct1,NONE,ds)
+	    | cnv (ct1,SOME ct2, ds) = (ct1, SOME ct2, ds)
+	  val (err,toView1,toView2) =
+	      (case funs of
+		   [] => (NONE,NONE,NONE)
+		 | [v] => 
+		       (SOME "Only one conversion was supplied. Two or zero expected.",
+			NONE, NONE)
+		 | [(h1,var1,s1),(h2,var2,s2)] =>
+			    (if h1=v1 andalso h2=v2 then
+				 (NONE,SOME(var1,s1),SOME(var2,s2))
+			     else if h1=v2 andalso h2=v1 then
+				 (NONE,SOME(var2,s2),SOME(var1,s1))
+				  else
+				      (if h1=h2 then 
+					   (SOME "Duplicate conversion functions",NONE,NONE)
+				       else (SOME (h1^" and/or "^h2^" unrecognized."),NONE,NONE)
+					   ))
+		 | _ => (SOME "Too many conversion functions.",NONE,NONE))
+	  val _ = case r of SOME r' => makeTypeName r' | _ => ()
+      in
+	  makeTypeName v1;
+	  makeTypeName v2;
+	  ExternalDeclExt(HX.Type 
+			  (HX.Record {
+				      errorMsg = err,
+				      name = r, 
+				      view1 = v1, 
+				      view2 = v2, 
+				      toView1 = toView1,
+				      toView2 = toView2,
+				      members = map cnv decls
+				      }))
+      end)
+
+hTyParamDeclaration:
+  parameterDeclaration
+	(let val (dt,decr) = parameterDeclaration
+	     val ct = { specifiers = #specifiers dt, 
+		        qualifiers = #qualifiers dt }
+         in
+	    insertParams [parameterDeclaration];	
+	    (ct,decr)
+	 end)
+
+hTyParamList:
+   hTyParamDeclaration	( [hTyParamDeclaration] )
+ | hTyParamList COMMA hTyParamDeclaration ( hTyParamDeclaration :: hTyParamList)
+
+hTyParams:
+	([])
+ | LPAREN hTyParamList RPAREN ( List.rev hTyParamList )
+
+hCurryParamList : 
+   expr	( [expr] )
+ | hCurryParamList COMMA expr ( expr :: hCurryParamList)
+
+hCurryParams:
+        ([])
+ | LPCOLON hCurryParamList RPCOLON ( List.rev hCurryParamList )
+
+hPickle:
+    PICKLE hName pushScope hTyParams LCURLY hName hCurryParams EQUALS GT typeName EQUALS GT hName hCurryParams popScope
+    (
+     let val pickle = 
+            { name = hName1, params = hTyParams, read = hName2, readArgs = hCurryParams1, 
+              write = hName3, writeArgs = hCurryParams2, typ = typeName} 
+     in
+        makeTypeName hName1;
+        ExternalDeclExt(HX.Type (HX.Pickle pickle))
+     end
+    )
+
+hMap:
+    MAP hName pushScope hTyParams LCURLY hMapDeclList popScope
+    (
+     let fun dummyMap e = 
+	 { 
+	  errorMsg = SOME e,
+	  name = hName,
+          params = hTyParams,
+	  keyType = HX.SKey(dummyCtype),
+	  rangeType = dummyCtype,
+          split = NONE,
+	  default = NONE,
+	  compress = NONE,
+	  decompress = NONE
+	  }	   
+	 val map = 
+	     (case hMapDeclList of
+		  (NONE,(SOME k, SOME v, s, d, c, u)) =>
+		      { 
+		       errorMsg = NONE,
+		       name = hName,
+		       params = hTyParams,
+		       keyType = k,
+		       rangeType = v,
+                       split = s, 
+		       default = d,
+		       compress = c,
+		       decompress = u
+		       }
+		| (SOME e,_) => (dummyMap e)
+		| (NONE,_) => (dummyMap "Missing map component."))
+     in
+	 makeTypeName hName;
+	 ExternalDeclExt(HX.Type (HX.Map map))
+     end
+     )
+
+hMapDeclList:
+     hMapDeclList hMapDecl
+     (let val (keyerror,hd) = hMapDecl 
+	  val (e2,tl) = hMapDeclList
+	  fun combine ((k1,v1,s1,d1,c1,u1), 
+	 	       (k2,v2,s2,d2,c2,u2)) = 
+	      (pickSome (k1,k2),
+	       pickSome (v1,v2),
+	       pickSome (s1,s2),
+	       pickSome (d1,d2),
+	       pickSome (c1,c2),
+	       pickSome (u1,u2))
+      in
+	  if keyerror then
+	       (SOME "Invalid component of map.",
+		(NONE,NONE,NONE,NONE,NONE,NONE))
+	  else 
+	       (e2,combine (hd,tl))
+      end
+	  handle MultipleOccurences => 
+	      (SOME "Map component occured multiple times.",
+	       (NONE,NONE,NONE,NONE,NONE,NONE))
+	  )
+   |  hMapDecl (let val (keyerror,hd) = hMapDecl
+		in
+		    if keyerror then
+			(SOME "Invalid component of map.",
+			 (NONE,NONE,NONE,NONE,NONE,NONE))
+		    else 
+			(NONE,hd)
+		end)
+
+hMapDecl:
+    hName typeName SEMICOLON 
+    ( if hName = "key" then 
+	  (false,(SOME (HX.SKey typeName),NONE,NONE,NONE,NONE,NONE))
+      else (true,(NONE,NONE,NONE,NONE,NONE,NONE)))
+  | hName LPAREN expr DOTDOT expr RPAREN SEMICOLON
+	  (if hName = "key" then
+           (false, (SOME (HX.LKey(expr1,expr2)),NONE,NONE,NONE,NONE,NONE))
+           else (true, (NONE,NONE,NONE,NONE,NONE,NONE)))
+  | SPLIT LPAREN expr COMMA expr RPAREN SEMICOLON
+          (false, (NONE,NONE,SOME(expr1,expr2),NONE,NONE,NONE))
+  | COMPRESS hName hCurryParams SEMICOLON
+	  (false,(NONE,NONE,NONE,NONE,SOME (HX.Param(hName, hCurryParams)),NONE))
+  | COMPRESS expr SEMICOLON
+	  (false,(NONE,NONE,NONE,NONE,SOME (HX.NonParam expr),NONE))
+  | DECOMPRESS hName hCurryParams SEMICOLON
+	  (false,(NONE,NONE,NONE,NONE,NONE,SOME (HX.Param(hName,hCurryParams))))
+  | DECOMPRESS expr SEMICOLON
+	  (false,(NONE,NONE,NONE,NONE,NONE,SOME (HX.NonParam expr)))
+  | VALUE typeName SEMICOLON 
+          (false,(NONE, SOME typeName,NONE,NONE,NONE,NONE))
+  | DEFAULT hName hCurryParams  SEMICOLON 
+	  (false,(NONE,NONE,NONE,SOME (HX.Param(hName, hCurryParams)),NONE,NONE))
+  | DEFAULT initializer SEMICOLON 
+	  (false,(NONE,NONE,NONE,SOME (HX.NonParam initializer),NONE,NONE))
+
+hStream:
+    STREAM hName pushScope hTyParams LCURLY ID hCurryParams COLON specifierQualifierList EQUALS GT specifierQualifierList SEMICOLON
+    ( makeTypeName hName;
+     ExternalDeclExt 
+     (HX.Type (HX.Stream {name = hName,
+			  params = hTyParams,
+			  logicalType = specifierQualifierList2,
+			  physicalType = specifierQualifierList1,
+			  transform = ID,
+			  transformArgs = hCurryParams
+			  }
+	       )
+      )
+     )
+
+(* FMS: removed when replacing phases with iterate statements.
+opEndStatement:
+                           ( Compound([]) ) 
+   | END compoundStatement ( markStatement srcMap (compoundStatement,ENDleft,compoundStatementright) )
+
+opBeginStatement:         
+                            ( Compound([]) )
+   | BEGIN compoundStatement ( markStatement srcMap (compoundStatement,BEGINleft,compoundStatementright) )
+*)
+(*
+opBody:
+    ostatementlist (StatExt(HX.HCompound (Compound (ostatementlist))))
+*)
+opDeclarationList:
+                     ( nil )
+   | declarationList ( seqToList declarationList )
+
+(* XXX - We should somehow abort if the storage in parameterDeclaration 
+   is non-empty. *)
+
+opEventParam: 
+                          ( NONE )
+  | parameterDeclaration 
+	(let val (dt,decr) = parameterDeclaration
+	     val ct = { specifiers = #specifiers dt, 
+		        qualifiers = #qualifiers dt }
+         in
+	    insertParams [parameterDeclaration];	
+	    SOME (ct,decr)
+	 end)
+
+hEvent:
+     EVENT hPathOpt pushScope LPAREN opEventParam RPAREN compoundStatement
+	({ 
+         name = hPathOpt,
+         arg = opEventParam,
+         body = compoundStatement
+         })
+
+(* NOTE: hEvents is reversed! *)
+hEvents:
+                            ( [] )
+   | hEvents hEvent         ( hEvent :: hEvents )
+   
+hSortList:
+    ID                 ([ID])
+  | ID COMMA hSortList (ID::hSortList)
+
+hIteratesClause:
+     OVER expr                    
+	( (SOME(expr,NONE,NONE), NONE, NONE, NONE) )
+   | OVER expr LBRACE expr DOTDOT expr RBRACE
+     	( (SOME(expr1,SOME expr2,SOME expr3), NONE, NONE, NONE) )
+   | FILTEREDBY ID              
+	( (NONE, SOME (HX.FilterFun ID), NONE, NONE) )
+   | FILTEREDBY LPAREN ID RPAREN expr              
+	( (NONE, SOME (HX.FilterExpr (ID,expr)), NONE, NONE) )
+   | SORTEDBY   hSortList       
+	( (NONE, NONE, SOME hSortList, NONE) )
+   | SORTED 
+        ( (NONE, NONE, SOME [], NONE) )
+   | WITHEVENTS ID
+	( (NONE, NONE, NONE, SOME (HX.DetectFun(ID))) ) 
+   | WITHEVENTS LPAREN ID LBRACE expr COLON expr RBRACE RPAREN expr
+	( (NONE, NONE, NONE, SOME (HX.DetectExpr(ID, expr1, expr2, expr3))) )
+
+hIteratesClauses:
+     hIteratesClauses hIteratesClause
+     (let val (error,tl) = hIteratesClauses 
+	  fun combine ((o1,f1,s1,e1),
+                       (o2,f2,s2,e2)) = (pickSome(o1,o2),
+					 pickSome(f1,f2),
+					 pickSome(s1,s2),
+					 pickSome(e1,e2))
+      in
+	  (error,combine (tl, hIteratesClause))
+      end
+      handle MultipleOccurences => 
+	  (SOME "Component of iterate occurs multiple times.",
+	   (NONE,NONE,NONE,NONE)))
+   | hIteratesClause ( (NONE,hIteratesClause) )
+
+hIterates:
+   ITERATE LPAREN hIteratesClauses RPAREN LCURLY hEvents RCURLY
+   ( let fun dummyIterate e = 
+	 { errorMsg = SOME e, over = EmptyExpr, range = (NONE,NONE),
+	   filter = NONE, sort = NONE, detector = NONE, events = [] }
+         fun optToList sopt = case sopt of NONE => [] | SOME s => s
+	 val result = 
+	     case hIteratesClauses of
+		 (NONE,(SOME (ot,eopt1,eopt2),f,s, d)) =>
+		     { errorMsg = NONE, over = ot,
+		       range = (eopt1,eopt2), filter = f, sort = s, 
+                       detector = d, events = List.rev hEvents }
+	       | (SOME e, _ ) => (dummyIterate e)
+	       | (_,_) => (dummyIterate "Missing required iterate clause.")
+     in
+	 result
+     end)
+
+(* FMS: phases removed in favor of iterates statement.
+hPhase:
+    PHASE fDefDeclaration LCURLY hIterates opDeclarationList
+    opBeginStatement opEndStatement hEvents
+    ( let val (retType,decr) = 
+	  (case fDefDeclaration of
+	       ({specifiers=[],qualifiers=[],storage=[]},decr) => 
+		   ({specifiers=[ParseTree.Void],
+		     qualifiers=[],
+		     storage=[]},decr)
+	     | _ => fDefDeclaration)
+	  val name = dclr2str decr
+	  val (error,params,retType) = 
+	      ((NONE,extractFuncParams decr,dtToCT retType)
+	       handle UnexpectedStorage => 
+		   (SOME "Phase parameter types should not have storage.",
+		    [],dummyCtype)
+		    | UnexpectedDeclarator =>
+		   (SOME "Invalid declarator in phase declaration.",
+		    [],dummyCtype))
+      in
+	  TypeDefs.popScope;
+	  ExternalDeclExt
+	  (HX.Phase {
+		     errorMsg = error,
+		     name = name,
+		     args = params,
+		     retType = retType,
+		     iterates = hIterates,
+		     vars  = map Decl opDeclarationList,
+		     beginBlock = opBeginStatement,
+		     endBlock = opEndStatement,
+		     events = List.rev hEvents
+		     })
+      end)
+
+hPhasePrototype:
+          PHASE notypeDeclarator
+           (insertFuncName(notypeDeclarator);
+	   ExternalDeclExt(HX.PhaseProto (dtToCT unknown, notypeDeclarator)))
+        | PHASE declarationSpecifiers declarator
+	   (insertFuncName(declarator);
+	   ExternalDeclExt(HX.PhaseProto (dtToCT declarationSpecifiers, declarator)))
+        | declarationModifiers PHASE notypeDeclarator
+	   (insertFuncName(notypeDeclarator);
+	   ExternalDeclExt(HX.PhaseProto (dtToCT declarationModifiers, notypeDeclarator)))
+        | PHASE declarationModifiers notypeDeclarator
+	   (insertFuncName(notypeDeclarator);
+	   ExternalDeclExt(HX.PhaseProto (dtToCT declarationModifiers, notypeDeclarator)))
+*)
+
+hConstexpr:
+    constexpr	(constexpr)
+  | LPAREN typeName RPAREN hConstexpr %prec INC
+		    (Cast (typeName,hConstexpr))
+  | LPAREN hConstexpr RPAREN   ( hConstexpr )
+
+hSigMsg:
+               (NONE)
+  | COMMA strings (SOME strings)				
+
+hSigParamTail:
+    DEFAULT hConstexpr   ((SOME hConstexpr, NONE ))
+  | LT hName hSigMsg GT ((NONE          , SOME (hName,false,hSigMsg)))
+  | LT hName RCOLON     ((NONE          , SOME (hName,true,NONE)))
+  | LT hName COLON hSigMsg GT ((NONE          , SOME (hName,true,hSigMsg)))
+ 
+hSigParamTails:
+           (NONE, (NONE, NONE))
+  | hSigParamTail hSigParamTails 
+	   (
+	    let val (err,tl) = hSigParamTails 
+		val hd = hSigParamTail
+		fun combine ((d1,s1),(d2,s2)) = (pickSome (d1,d2),
+						 pickSome (s1,s2))
+	    in
+		(err, combine (hd, tl))
+	    end
+	    handle MultipleOccurences => 
+		(SOME "Same parameter option occured multiple times.",
+		 (NONE,NONE))
+		)
+	
+hMode:
+    NEW    ( SpecExt HX.HNew    )
+  | EXISTS ( SpecExt HX.HExists )	
+
+hSigParam:
+    parameterDeclaration hSigParamTails
+    (
+     let val (error,(d,(switch,hasArg,msg))) = 
+	 (case hSigParamTails of 
+	      (NONE,(d,SOME s)) => (NONE,(d,s))
+	    | (NONE,(NONE,NONE)) => (NONE,(NONE,("",true,NONE)))
+	    | (SOME e, _ ) => (SOME e,(NONE,("",true,NONE)))
+	    | (NONE,_) => (SOME "Parameters to sig_main require switches.",
+			   (NONE,("",true,NONE))))
+	 val (decltype,declarator) = parameterDeclaration
+	 val name = dclr2str declarator
+	 val (err,typ) =
+	     ((error,convParam parameterDeclaration)
+	       handle UnexpectedStorage => 
+		   (SOME "Sig_main parameter types should not have storage.",
+		    (dummyCtype,EmptyDecr))
+		    | UnexpectedDeclarator =>
+		   (SOME "Invalid declarator in sig_main declaration.",
+		    (dummyCtype,EmptyDecr))
+		   )
+     in
+     TypeDefs.addNoTdef name;
+     { 
+      errorMsg = err,
+      name = name,
+      typ = typ,
+      default = d,
+      switch = switch,
+      hasArg = hasArg,
+      msg = msg
+      }
+     end)
+
+hSigParamList:
+   hSigParam                  ( [hSigParam] )
+ | hSigParamList COMMA hSigParam ( hSigParam :: hSigParamList )
+
+hSigParams:
+     ( [] )
+ | hSigParamList ( hSigParamList )
+
+hSigMainRetType:
+               ( [] )
+  | INT        ( [Int] )
+  | VOID       ( [Void] )
+
+hSigMainPrefix: 
+    hSigMainRetType SIG_MAIN
+    ( TypeDefs.addNoTdef "sig_main";
+      hSigMainRetType)
+
+hSigMain:
+    hSigMainPrefix LPAREN pushScope hSigParams RPAREN 
+    compoundStatement popScope
+   (
+    TypeDefs.addNoTdef "sig_main";
+    ExternalDeclExt (HX.SigMain
+		     { retType = {qualifiers = [], specifiers =hSigMainPrefix},
+		       params = List.rev hSigParams,
+		       body = compoundStatement
+		       })
+    )
+
+hDirectory: 
+   DIRECTORY hName pushScope hTyParams LCURLY hDirMemberList popScope
+   ( makeTypeName hName;
+     ExternalDeclExt(HX.Type (HX.Directory { name = hName, params = hTyParams, members = hDirMemberList } ))
+     )
+
+(* The following productions are slight modifications of struct.... rules. *)
+hDirMemberList:
+	  hDirMember		([hDirMember])
+        | hDirMemberList hDirMember
+					(hDirMemberList @ [hDirMember])
+
+hDirMember:
+   hDirDeclaration SEMICOLON 
+      ( { declaration = hDirDeclaration } )
+
+hDirDeclaration:
+	  specifierQualifierList hDirDeclaratorList
+					((specifierQualifierList, hDirDeclaratorList))
+        | typeQualifierList hNoTypeDirDeclaratorList
+                                        (let
+					    val ct = {qualifiers=typeQualifierList, specifiers=[]}
+					 in
+					   (ct, hNoTypeDirDeclaratorList)
+					 end)
+
+hDirDeclaratorList:
+          hDirDeclarator		([hDirDeclarator])
+        | hDirDeclaratorList COMMA hDirDeclarator
+					(hDirDeclaratorList @ [hDirDeclarator])
+
+hNoTypeDirDeclaratorList:
+          hNoTypeDirDeclarator	([hNoTypeDirDeclarator])
+        | hNoTypeDirDeclaratorList COMMA hDirDeclarator
+					(hNoTypeDirDeclaratorList @ [hDirDeclarator])
+
+hDirDeclarator:
+	  declarator			(declarator, EmptyExpr)
+	| declarator DEFAULT initializer	(declarator, initializer)
+
+hNoTypeDirDeclarator:
+	  notypeDeclarator		(notypeDeclarator, EmptyExpr)
+	| notypeDeclarator DEFAULT initializer	(notypeDeclarator, initializer)
+
+
+hEventTyElt:
+	  specifierQualifierList declarator 
+		(specifierQualifierList,declarator)
+	| typeQualifierList notypeDeclarator 
+                (let val ct = {qualifiers=typeQualifierList, specifiers=[]}
+		 in
+		   (ct, notypeDeclarator)
+		end)
+hEventTyElts:
+ 	  hEventTyElt  ( [hEventTyElt] )
+	| hEventTyElts COMMA hEventTyElt ( hEventTyElt :: hEventTyElts )
+
+hEventTy:
+	MUNION hName LBCOLON hEventTyElts trailingComma
+	  (makeTypeName hName;
+	   ExternalDeclExt(HX.Type
+		(HX.Event { name=hName, elts=hEventTyElts })))
+
+hEventElts:
+    ID		([(ID,NONE)])
+  | ID EQUALS expr ([(ID,SOME expr)])
+  | hEventElts COMMA ID (hEventElts @ [(ID,NONE)])
+  | hEventElts COMMA ID EQUALS expr (hEventElts @ [(ID,SOME expr)])
+
+

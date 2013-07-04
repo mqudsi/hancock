@@ -1,0 +1,332 @@
+= sigmain004.exe =
+./sigmain004.exe: Must invoke with -t: switch 
+first map:
+first is NULL.
+second map:
+second is NULL.
+second map:
+second is NULL.
+third map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+fourth map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+writeEntry:
+	The value for (973)360-8077 is:in: 35, out: 35, jumble: 35.
+fifth map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 39, out: 39, jumble: 39.
+writeEntry:
+	The value for (973)360-8077 is:in: 38, out: 38, jumble: 38.
+sixth map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+writeEntry:
+	The value for (973)360-8077 is:in: 35, out: 35, jumble: 35.
+seventh map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+./sigmain004.exe: ../genData/data/activeMapNew2: map with mode EXISTS must exist
+./sigmain004.exe: HRSmapOpen: ../genData/data/activeMap opened multiple times. 
+Maps must either be opened as const all times or zero times.
+./sigmain004.exe: HRSmapOpen: ../genData/data/activeMapDC opened multiple times. 
+A map can be opened as new only the first time.
+= map007.exe =
+Map value for (973)984-3167:
+c: 0
+uc: 0 
+s: 0 
+us: 0 
+i: 0 
+ui: 0 
+l: 0
+ul: 0 
+f: 0.000000  d: 0.000000 
+Array:
+buf[0] = 0
+buf[1] = 0
+buf[2] = 0
+buf[3] = 0
+buf[4] = 0
+Map value for (973)984-3167:
+c: 2
+uc: 3 
+s: 4 
+us: 5 
+i: 6 
+ui: 7 
+l: 8
+ul: 9 
+f: 4.000000  d: 5.000000 
+Array:
+buf[0] = 0
+buf[1] = 10
+buf[2] = 20
+buf[3] = 30
+buf[4] = 40
+Map value for (973)984-3167:
+c: 2
+uc: 3 
+s: 4 
+us: 5 
+i: 6 
+ui: 7 
+l: 8
+ul: 9 
+f: 4.000000  d: 5.000000 
+Array:
+buf[0] = 0
+buf[1] = 10
+buf[2] = 20
+buf[3] = 30
+buf[4] = 40
+Map value for (973)984-3167:
+c: 4
+uc: 6 
+s: 8 
+us: 10 
+i: 12 
+ui: 14 
+l: 16
+ul: 18 
+f: 8.000000  d: 10.000000 
+Array:
+buf[0] = 0
+buf[1] = 20
+buf[2] = 40
+buf[3] = 60
+buf[4] = 80
+= iteration001.exe =
+(200)310-1000: 1000
+(200)310-1015: 1015
+(200)310-1030: 1030
+(200)310-1045: 1045
+(200)320-1000: 1000
+(200)320-1015: 1015
+(200)320-1030: 1030
+(200)320-1045: 1045
+(200)330-1000: 1000
+(200)330-1015: 1015
+(200)330-1030: 1030
+(200)330-1045: 1045
+(200)340-1000: 1000
+(200)340-1015: 1015
+(200)340-1030: 1030
+(200)340-1045: 1045
+(201)300-1000: 1000
+(201)300-1015: 1015
+(201)300-1030: 1030
+(201)300-1045: 1045
+= directory008.exe =
+2
+5
+9
+87
+84
+2000
+3.141590
+a
+
+x: 11
+y: 12.080000
+myArray: 
+[0]: 3
+[1]: 4
+
+mySecondArray: 
+[0]: 5
+[1]: 6
+[2]: 7
+
+
+
+[0]: 
+z: 8
+myString: [13]: first string.
+
+[1]: 
+z: 9
+myString: [14]: second string.
+
+
+= directory009.exe =
+2
+5
+9
+96
+84
+2001
+4.141590
+b
+
+x: 12
+y: 13.080000
+myArray: 
+[0]: 4
+[1]: 5
+
+mySecondArray: 
+[0]: 6
+[1]: 7
+[2]: 8
+
+
+
+[0]: 
+z: 9
+myString: [17]: new first string.
+
+[1]: 
+z: 10
+myString: [18]: new second string.
+
+
+= stream002.exe =
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                      """"""##%%&(((((((((())))))))))**,,,,,,-...1::;;;;;;;;;;<<<===>>>>>DDSSSSS\_______aaaaaaaaaaaaaaaaabcccccccccccccccdddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffffffgghhhhhhhhhiiiiiiiiiiiiiiiiiikllllllllllllmmmmmmmmmmnnnnnnnnnnnnnnoooooooooooooooooooooppppppprrrrrrrrrrrrrrrrrrrssssssssssssssssssttttttttttttttttttttttttttttttttttttuuuuuuuvvvvvvwyyyyyy{{{{{{{{{}}}}}}}}}
+= sort005.exe =
+dog blue  First: i=-1, j=2   c=b Second: i=11, j=13   f=130.30 d=-5.40 l=101 
+bat blue  First: i=-1, j=2   c=b Second: i=11, j=17   f=130.30 d=-4.40 l=101 
+pop red   First: i=14, j=3   c=a Second: i=-9, j=99   f=107.30 d=-0.40 l=356 
+cat blue  First: i=14, j=8   c=a Second: i=-9, j=99   f=107.30 d=-0.40 l=356 
+top blue  First: i= 2, j=9   c=a Second: i=-9, j=99   f=107.30 d=-0.40 l=356 
+cat blue  First: i=14, j=9   c=ô Second: i=-9, j=97   f=107.30 d=-0.40 l=356 
+red blue  First: i=10, j=2   c=d Second: i=18, j=15   f=-17.30 d=10.40 l=-10 
+cat blue  First: i=12, j=9   c=a Second: i=-9, j=99   f=107.30 d=10.40 l=356 
+cat red   First: i=-1, j=1   c=a Second: i=10, j=12   f=120.30 d=12.40 l=100 
+cat green First: i=-1, j=2   c=b Second: i=11, j=13   f=130.30 d=14.40 l=101 
+cat green First: i=-1, j=7   c=b Second: i=10, j=15   f=-13.30 d=14.40 l=-11 
+cat blue  First: i=-1, j=2   c=b Second: i=11, j=13   f=130.30 d=15.40 l=101 
+cat red   First: i=-1, j=2   c=b Second: i=11, j=19   f=130.30 d=19.40 l=101 
+= pickle001.exe =
+Empty file
+Empty file
+Initial pickle value: a
+New pickle value: c
+In init_foo: c
+Initial pickle value: c
+New pickle value: e
+In init_foo: c
+In init_foo: e
+Initial pickle value: c
+New pickle value: e
+In init_foo: e
+Initial pickle value: e
+New pickle value: g
+= param009.exe =
+Input should be small!
+start!
+  npa: 222-000-0000
+    nxx: 222-233-0000
+      line: 222-233-2099
+        calls: 222-233-2099(o) 426-681-4599(t) 426-681-4599(d) 96977173 48500
+        calls: 222-233-2099(o) 820-442-6399(t) 820-442-6399(d) 96978457 5330
+  npa: 223-000-0000
+    nxx: 223-234-0000
+      line: 223-234-0099
+        calls: 223-234-0099(o) 547-906-0799(t) 855-248-4499(d) 96977739 5640
+      line: 223-234-0199
+        calls: 223-234-0199(o) 741-544-8499(t) 855-526-2899(d) 96979345 1430
+  npa: 221-000-0000
+    nxx: 221-239-0000
+      line: 221-239-0399
+        calls: 221-239-0399(o) 721-258-4199(t) 855-540-4599(d) 96976885 350
+    nxx: 221-236-0000
+      line: 221-236-0399
+        calls: 221-236-0399(o) 585-963-5599(t) 855-544-5599(d) 96978527 1260
+  npa: 222-000-0000
+    nxx: 222-234-0000
+      line: 222-234-1299
+        calls: 222-234-1299(o) 222-357-0099(t) 855-708-1599(d) 96979104 110
+      line: 222-234-0599
+        calls: 222-234-0599(o) 395-438-2799(t) 855-844-2799(d) 96980047 80
+  npa: 221-000-0000
+    nxx: 221-236-0000
+      line: 221-236-0199
+        calls: 221-236-0199(o) 936-361-5299(t) 936-361-5299(d) 96977709 710
+    nxx: 221-239-0000
+      line: 221-239-0199
+        calls: 221-239-0199(o) 974-429-8199(t) 974-429-8199(d) 96980122 9900
+The End.
+= hl001.exe =
+1000
+1003
+1006
+1009
+1012
+1015
+1018
+1021
+1024
+1027
+1030
+1033
+1036
+1039
+1042
+1045
+1048
+= hl001a.exe =
+1000
+1003
+1006
+1009
+1012
+1015
+1018
+1021
+1024
+1027
+1030
+1033
+1036
+1039
+1042
+1045
+1048

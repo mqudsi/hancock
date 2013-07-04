@@ -1,0 +1,1530 @@
+= sigmain001.exe =
+./sigmain001.exe: Must invoke with -x: switch 
+Parameters: first = a, second = 1, third = 0, fourth = 1, fifth = b. 
+Second parameter was true.
+Third parameter was false.
+Fourth parameter was true.
+Parameters: first = t, second = 0, third = 1, fourth = 0, fifth = t. 
+Second parameter was false.
+Third parameter was true.
+Fourth parameter was false.
+./sigmain001.exe: Non-numeric command-line argument passed to parameter fifth of type char.
+= sigmain002.exe =
+Parameters: paramName = hello, second = hi
+Parameters: paramName = goodbye, second = hi
+./sigmain002.exe: Must invoke with -s: switch 
+= sigmain003.exe =
+./sigmain003.exe: Must invoke with -t: switch 
+./sigmain003.exe: could not find file 0
+first stream is null.
+second stream is null.
+third stream is non-null.
+fourth stream is non-null.
+first stream is non-null.
+second stream is non-null.
+third stream is non-null.
+fourth stream is non-null.
+= sigmain004.exe =
+./sigmain004.exe: Must invoke with -t: switch 
+first map:
+first is NULL.
+second map:
+second is NULL.
+second map:
+second is NULL.
+third map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+fourth map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+writeEntry:
+	The value for (973)360-8077 is:in: 35, out: 35, jumble: 35.
+fifth map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 39, out: 39, jumble: 39.
+writeEntry:
+	The value for (973)360-8077 is:in: 38, out: 38, jumble: 38.
+sixth map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+writeEntry:
+	The value for (973)360-8077 is:in: 35, out: 35, jumble: 35.
+seventh map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+./sigmain004.exe: ../genData/data/activeMapNew2: map with mode EXISTS must exist
+./sigmain004.exe: HRSmapOpen: ../genData/data/activeMap opened multiple times. 
+Maps must either be opened as const all times or zero times.
+./sigmain004.exe: HRSmapOpen: ../genData/data/activeMapDC opened multiple times. 
+A map can be opened as new only the first time.
+= sigmain005.exe =
+./sigmain005.exe: Must invoke with -i: switch 
+The value of i is: 10.
+The value of k is: 24.
+The value of i is: 11.
+The value of k is: 56.
+The value of i is: -7096.
+The value of k is: 24.
+./sigmain005.exe: Command-line argument passed to parameter i doesn't fit type int.
+./sigmain005.exe: Non-numeric command-line argument passed to parameter i of type int.
+./sigmain005.exe: Illegal option: j.
+usage: -i: -k: 
+= sigmain006.exe =
+./sigmain006.exe: Must invoke with -k: switch 
+The value of i is: 0.001000.
+The value of k is: 4.500000.
+The value of i is: 0.001000.
+The value of k is: -4.500000.
+The value of i is: 0.001000.
+The value of k is: 40000.000000.
+./sigmain006.exe: Non-numeric command-line argument passed to parameter k of type double.
+= sigmain007.exe =
+= sigmain008.exe =
+first map:
+ReadEntry:
+	The value for (973)360-8077 is: in: 36, out: 36, jumble: 36.
+= sigmain009.exe =
+User code: ./sigmain009.exe: command-line argument i had value: 123.
+= sigmain010.exe =
+./sigmain010.exe: usage: 
+	-c:	
+	-u:	yesterday's usage map
+	-U:	today's usage map
+= sigmain011.exe =
+The value of f is: 123.34.
+The value of g is: 2.40.
+= sigmain012.exe =
+The value of l is: 1231231234.
+The value of k is: 2342342345.
+The value of j is: 2342342345.
+The value of i is: 2342342345.
+The value of l is: -1231231234.
+The value of k is: -2342342345.
+The value of j is: 0.
+The value of i is: 0.
+./sigmain012.exe: Command-line argument passed to parameter j doesn't fit type unsigned long.
+./sigmain012.exe: Command-line argument passed to parameter i doesn't fit type unsigned long long.
+./sigmain012.exe: Command-line argument passed to parameter l doesn't fit type long.
+= sigmain014.exe =
+The value of u is: 65535.
+The value of s is: 32767.
+The value of j is: 4294967295.
+The value of i is: 2147483647.
+The value of u is: 65535.
+The value of s is: -32767.
+The value of j is: 4294967295.
+The value of i is: -2147483647.
+./sigmain014.exe: Command-line argument passed to parameter u doesn't fit type unsigned short.
+./sigmain014.exe: Command-line argument passed to parameter s doesn't fit type short.
+./sigmain014.exe: Command-line argument passed to parameter j doesn't fit type unsigned int.
+./sigmain014.exe: Command-line argument passed to parameter i doesn't fit type int.
+= sigmain015.exe =
+./sigmain015.exe: Command-line argument passed to parameter c doesn't fit type unsigned char.
+Unsigned char c is: "98"
+Unsigned char c is: "b"
+Signed char s is: "127"
+Signed char s is: ""
+./sigmain015.exe: Command-line argument passed to parameter s doesn't fit type signed char.
+Unsigned char c is: "255"
+Unsigned char c is: "ÿ"
+Signed char s is: "127"
+Signed char s is: ""
+./sigmain015.exe: Command-line argument passed to parameter c doesn't fit type unsigned char.
+Unsigned char c is: "117"
+Unsigned char c is: "u"
+Signed char s is: "10"
+Signed char s is: "
+"
+Unsigned char c is: "228"
+Unsigned char c is: "ä"
+Signed char s is: "63"
+Signed char s is: "?"
+./sigmain015.exe: Non-numeric command-line argument passed to parameter c of type unsigned char.
+= sigmain016.exe =
+Flag c was not present on the command line.
+The value of min is: 0.
+The value of max is: 9999999999.
+The value of def is: 12.
+The value of m<:10:> is: 12.
+= map002.exe =
+g = 1.234500 should be 1.2345
+= map003.exe =
+{1,2,3} = {1,2,3} ? 
+= map004.exe =
+{1,2,3} = {1,2,3} ? 
+= map005.exe =
+= map006.exe =
+pn is in the map?
+pn has been removed.
+12000088
+3
+20
+= map007.exe =
+Map value for (973)984-3167:
+c: 0
+uc: 0 
+s: 0 
+us: 0 
+i: 0 
+ui: 0 
+l: 0
+ul: 0 
+f: 0.000000  d: 0.000000 
+Array:
+buf[0] = 0
+buf[1] = 0
+buf[2] = 0
+buf[3] = 0
+buf[4] = 0
+Map value for (973)984-3167:
+c: 2
+uc: 3 
+s: 4 
+us: 5 
+i: 6 
+ui: 7 
+l: 8
+ul: 9 
+f: 4.000000  d: 5.000000 
+Array:
+buf[0] = 0
+buf[1] = 10
+buf[2] = 20
+buf[3] = 30
+buf[4] = 40
+Map value for (973)984-3167:
+c: 2
+uc: 3 
+s: 4 
+us: 5 
+i: 6 
+ui: 7 
+l: 8
+ul: 9 
+f: 4.000000  d: 5.000000 
+Array:
+buf[0] = 0
+buf[1] = 10
+buf[2] = 20
+buf[3] = 30
+buf[4] = 40
+Map value for (973)984-3167:
+c: 4
+uc: 6 
+s: 8 
+us: 10 
+i: 12 
+ui: 14 
+l: 16
+ul: 18 
+f: 8.000000  d: 10.000000 
+Array:
+buf[0] = 0
+buf[1] = 20
+buf[2] = 40
+buf[3] = 60
+buf[4] = 80
+= map008.exe =
+value : 12.
+value : 13.
+value : 13.
+value : 14.
+= map009.exe =
+100000000 is out of range of map.
+10 is in the map.
+100 is not in the map.
+= record001.exe =
+5 = 5 ?
+10 = 10 
+= record002.exe =
+5 = 5 ?
+10 = 10 
+= record003.exe =
+5 = 5 and 0 0 0 0 1 1 1 1 1 2 
+10 = 10 and 0.000000 0.000000 0.000000 0.000000 5.000000 5.000000 5.000000 5.000000 5.000000 10.000000 
+= record004.exe =
+50 = 50, 100 = 100, 300 = 300
+100 = 100, 200 = 200, 300 = 300
+= record005.exe =
+10 = 10, 15 = 15, 100 = 100, 300 = 300
+20 = 20, 30 = 30, 200 = 200, 300 = 300
+= record006.exe =
+40 = 40, 60 = 60, 200 = 200, 100 = 100
+20 = 20, 30 = 30, 200 = 200, 300 = 300
+= range002.exe =
+= range006.exe =
+ReadEntry:
+	The value for (973)360-8077 is: value: 9.
+writeEntry:
+	The value for (973)360-8077 is: value: 8.
+= range007.exe =
+ReadEntry:
+	The value for (973)360-8077 is: value: 9.
+writeEntry:
+	The value for (973)360-8077 is: value: 8.
+= phase001.exe =
+Input should be small!
+start!
+  npa: 222-000-0000
+    nxx: 222-233-0000
+      line: 222-233-2099
+        calls: 222-233-2099(o) 426-681-4599(t) 426-681-4599(d) 96977173 4850
+        calls: 222-233-2099(o) 820-442-6399(t) 820-442-6399(d) 96978457 533
+  npa: 223-000-0000
+    nxx: 223-234-0000
+      line: 223-234-0099
+        calls: 223-234-0099(o) 547-906-0799(t) 855-248-4499(d) 96977739 564
+      line: 223-234-0199
+        calls: 223-234-0199(o) 741-544-8499(t) 855-526-2899(d) 96979345 143
+  npa: 221-000-0000
+    nxx: 221-239-0000
+      line: 221-239-0399
+        calls: 221-239-0399(o) 721-258-4199(t) 855-540-4599(d) 96976885 35
+    nxx: 221-236-0000
+      line: 221-236-0399
+        calls: 221-236-0399(o) 585-963-5599(t) 855-544-5599(d) 96978527 126
+  npa: 222-000-0000
+    nxx: 222-234-0000
+      line: 222-234-1299
+        calls: 222-234-1299(o) 222-357-0099(t) 855-708-1599(d) 96979104 11
+      line: 222-234-0599
+        calls: 222-234-0599(o) 395-438-2799(t) 855-844-2799(d) 96980047 8
+  npa: 221-000-0000
+    nxx: 221-236-0000
+      line: 221-236-0199
+        calls: 221-236-0199(o) 936-361-5299(t) 936-361-5299(d) 96977709 71
+    nxx: 221-239-0000
+      line: 221-239-0199
+        calls: 221-239-0199(o) 974-429-8199(t) 974-429-8199(d) 96980122 990
+The End.
+= phase002.exe =
+Start.
+(222)233-2099
+Count: 2.
+(223)234-0099
+Count: 1.
+(223)234-0199
+Count: 1.
+(221)239-0399
+Count: 1.
+(221)236-0399
+Count: 1.
+(222)234-1299
+Count: 1.
+(222)234-0599
+Count: 1.
+(221)236-0199
+Count: 1.
+(221)239-0199
+Count: 1.
+Finish.
+= phase003.exe =
+Input should be small!
+start!
+    calls: 221-239-0399(o) 721-258-4199(t) 855-540-4599(d) 96976885 35
+    calls: 222-233-2099(o) 426-681-4599(t) 426-681-4599(d) 96977173 4850
+    calls: 221-236-0199(o) 936-361-5299(t) 936-361-5299(d) 96977709 71
+    calls: 223-234-0099(o) 547-906-0799(t) 855-248-4499(d) 96977739 564
+    calls: 222-233-2099(o) 820-442-6399(t) 820-442-6399(d) 96978457 533
+    calls: 221-236-0399(o) 585-963-5599(t) 855-544-5599(d) 96978527 126
+    calls: 222-234-1299(o) 222-357-0099(t) 855-708-1599(d) 96979104 11
+    calls: 223-234-0199(o) 741-544-8499(t) 855-526-2899(d) 96979345 143
+    calls: 222-234-0599(o) 395-438-2799(t) 855-844-2799(d) 96980047 8
+    calls: 221-239-0199(o) 974-429-8199(t) 974-429-8199(d) 96980122 990
+The End.
+= phase004.exe =
+Start.
+(222)233-2099
+Count: 2.
+(223)234-0099
+Count: 1.
+(223)234-0199
+Count: 1.
+(221)239-0399
+Count: 1.
+(221)236-0399
+Count: 1.
+(222)234-1299
+Count: 1.
+(222)234-0599
+Count: 1.
+(221)236-0199
+Count: 1.
+(221)239-0199
+Count: 1.
+Finish.
+= phase005.exe =
+Input should be small!
+start!
+  npa: 221-000-0000
+    nxx: 221-236-0000
+      line: 221-236-0199
+        calls: 221-236-0199(o) 936-361-5299(t) 936-361-5299(d) 96977709 71
+      line: 221-236-0399
+        calls: 221-236-0399(o) 585-963-5599(t) 855-544-5599(d) 96978527 126
+    nxx: 221-239-0000
+      line: 221-239-0199
+        calls: 221-239-0199(o) 974-429-8199(t) 974-429-8199(d) 96980122 990
+      line: 221-239-0399
+        calls: 221-239-0399(o) 721-258-4199(t) 855-540-4599(d) 96976885 35
+  npa: 222-000-0000
+    nxx: 222-233-0000
+      line: 222-233-2099
+        calls: 222-233-2099(o) 426-681-4599(t) 426-681-4599(d) 96977173 4850
+        calls: 222-233-2099(o) 820-442-6399(t) 820-442-6399(d) 96978457 533
+    nxx: 222-234-0000
+      line: 222-234-0599
+        calls: 222-234-0599(o) 395-438-2799(t) 855-844-2799(d) 96980047 8
+      line: 222-234-1299
+        calls: 222-234-1299(o) 222-357-0099(t) 855-708-1599(d) 96979104 11
+  npa: 223-000-0000
+    nxx: 223-234-0000
+      line: 223-234-0099
+        calls: 223-234-0099(o) 547-906-0799(t) 855-248-4499(d) 96977739 564
+      line: 223-234-0199
+        calls: 223-234-0199(o) 741-544-8499(t) 855-526-2899(d) 96979345 143
+The End.
+= phase006.exe =
+Input should be small!
+start!
+  npa: 221-000-0000
+    nxx: 221-236-0000
+      line: 221-236-0199
+        calls: 221-236-0199(o) 936-361-5299(t) 936-361-5299(d) 96977709 71
+      line: 221-236-0399
+        calls: 221-236-0399(o) 585-963-5599(t) 855-544-5599(d) 96978527 126
+    nxx: 221-239-0000
+      line: 221-239-0199
+        calls: 221-239-0199(o) 974-429-8199(t) 974-429-8199(d) 96980122 990
+      line: 221-239-0399
+        calls: 221-239-0399(o) 721-258-4199(t) 855-540-4599(d) 96976885 35
+  npa: 222-000-0000
+    nxx: 222-233-0000
+      line: 222-233-2099
+        calls: 222-233-2099(o) 426-681-4599(t) 426-681-4599(d) 96977173 4850
+        calls: 222-233-2099(o) 820-442-6399(t) 820-442-6399(d) 96978457 533
+    nxx: 222-234-0000
+      line: 222-234-0599
+        calls: 222-234-0599(o) 395-438-2799(t) 855-844-2799(d) 96980047 8
+      line: 222-234-1299
+        calls: 222-234-1299(o) 222-357-0099(t) 855-708-1599(d) 96979104 11
+  npa: 223-000-0000
+    nxx: 223-234-0000
+      line: 223-234-0099
+        calls: 223-234-0099(o) 547-906-0799(t) 855-248-4499(d) 96977739 564
+      line: 223-234-0199
+        calls: 223-234-0199(o) 741-544-8499(t) 855-526-2899(d) 96979345 143
+The End.
+= phase008.exe =
+Input should be small!
+start!
+  npa: 221-000-0000
+    line: 221-236-0199
+      nxx: 936-361-0000
+        calls: 221-236-0199(o) 936-361-5299(t) 936-361-5299(d) 96977709 71
+    line: 221-236-0399
+      nxx: 855-544-0000
+        calls: 221-236-0399(o) 585-963-5599(t) 855-544-5599(d) 96978527 126
+    line: 221-239-0199
+      nxx: 974-429-0000
+        calls: 221-239-0199(o) 974-429-8199(t) 974-429-8199(d) 96980122 990
+    line: 221-239-0399
+      nxx: 855-540-0000
+        calls: 221-239-0399(o) 721-258-4199(t) 855-540-4599(d) 96976885 35
+  npa: 222-000-0000
+    line: 222-233-2099
+      nxx: 426-681-0000
+        calls: 222-233-2099(o) 426-681-4599(t) 426-681-4599(d) 96977173 4850
+      nxx: 820-442-0000
+        calls: 222-233-2099(o) 820-442-6399(t) 820-442-6399(d) 96978457 533
+    line: 222-234-0599
+      nxx: 855-844-0000
+        calls: 222-234-0599(o) 395-438-2799(t) 855-844-2799(d) 96980047 8
+    line: 222-234-1299
+      nxx: 855-708-0000
+        calls: 222-234-1299(o) 222-357-0099(t) 855-708-1599(d) 96979104 11
+  npa: 223-000-0000
+    line: 223-234-0099
+      nxx: 855-248-0000
+        calls: 223-234-0099(o) 547-906-0799(t) 855-248-4499(d) 96977739 564
+    line: 223-234-0199
+      nxx: 855-526-0000
+        calls: 223-234-0199(o) 741-544-8499(t) 855-526-2899(d) 96979345 143
+The End.
+= phase009.exe =
+The value of x is: 1.
+The value of x is: 2.
+The value of x is: 3.
+The value of x is: 4.
+The value of x is: 5.
+The value of x is: 6.
+The value of x is: 7.
+The value of x is: 8.
+The value of x is: 9.
+The value of x is: 10.
+= iteration001.exe =
+(200)310-1000: 1000
+(200)310-1015: 1015
+(200)310-1030: 1030
+(200)310-1045: 1045
+(200)320-1000: 1000
+(200)320-1015: 1015
+(200)320-1030: 1030
+(200)320-1045: 1045
+(200)330-1000: 1000
+(200)330-1015: 1015
+(200)330-1030: 1030
+(200)330-1045: 1045
+(200)340-1000: 1000
+(200)340-1015: 1015
+(200)340-1030: 1030
+(200)340-1045: 1045
+(201)300-1000: 1000
+(201)300-1015: 1015
+(201)300-1030: 1030
+(201)300-1045: 1045
+= iteration002.exe =
+First test.
+(200)310-1000: 1000
+(200)310-1015: 1015
+(200)310-1030: 1030
+(200)310-1045: 1045
+(200)320-1000: 1000
+(200)320-1015: 1015
+(200)320-1030: 1030
+(200)320-1045: 1045
+(200)330-1000: 1000
+(200)330-1015: 1015
+(200)330-1030: 1030
+(200)330-1045: 1045
+(200)340-1000: 1000
+(200)340-1015: 1015
+(200)340-1030: 1030
+(200)340-1045: 1045
+Second test.
+(200)310-1000: 1000
+(200)310-1015: 1015
+(200)310-1030: 1030
+(200)310-1045: 1045
+(200)320-1000: 1000
+(200)320-1015: 1015
+(200)320-1030: 1030
+(200)320-1045: 1045
+(200)330-1000: 1000
+(200)330-1015: 1015
+(200)330-1030: 1030
+(200)330-1045: 1045
+(200)340-1000: 1000
+(200)340-1015: 1015
+(200)340-1030: 1030
+(200)340-1045: 1045
+(201)300-1000: 1000
+(201)300-1015: 1015
+(201)300-1030: 1030
+(201)300-1045: 1045
+= iteration003.exe =
+First test.
+start!
+    npa: 200-000-0000
+        nxx: 200-310-0000
+            (200)310-1000:             1000
+            (200)310-1015:             1015
+            (200)310-1030:             1030
+            (200)310-1045:             1045
+        nxx: 200-320-0000
+            (200)320-1000:             1000
+            (200)320-1015:             1015
+            (200)320-1030:             1030
+            (200)320-1045:             1045
+        nxx: 200-330-0000
+            (200)330-1000:             1000
+            (200)330-1015:             1015
+            (200)330-1030:             1030
+            (200)330-1045:             1045
+        nxx: 200-340-0000
+            (200)340-1000:             1000
+            (200)340-1015:             1015
+            (200)340-1030:             1030
+            (200)340-1045:             1045
+The End.
+Second test.
+start!
+    npa: 200-000-0000
+        nxx: 200-310-0000
+            (200)310-1000:             1000
+            (200)310-1015:             1015
+            (200)310-1030:             1030
+            (200)310-1045:             1045
+        nxx: 200-320-0000
+            (200)320-1000:             1000
+            (200)320-1015:             1015
+            (200)320-1030:             1030
+            (200)320-1045:             1045
+        nxx: 200-330-0000
+            (200)330-1000:             1000
+            (200)330-1015:             1015
+            (200)330-1030:             1030
+            (200)330-1045:             1045
+        nxx: 200-340-0000
+            (200)340-1000:             1000
+            (200)340-1015:             1015
+            (200)340-1030:             1030
+            (200)340-1045:             1045
+    npa: 201-000-0000
+        nxx: 201-300-0000
+            (201)300-1000:             1000
+            (201)300-1015:             1015
+            (201)300-1030:             1030
+            (201)300-1045:             1045
+The End.
+= iteration004.exe =
+First test.
+(200)310-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)320-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)330-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)340-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+Second test.
+(200)310-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)320-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)330-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)340-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(201)300-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+= iteration005.exe =
+First test.
+(200)300-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)310-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)320-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)330-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(200)340-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+Second test.
+(201)300-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(201)310-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(201)320-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(201)330-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+(201)340-0000:
+1000: 1000
+1015: 1015
+1030: 1030
+1045: 1045
+= iteration007.exe =
+(200)310-1015: 1015
+(200)320-1015: 1015
+(200)330-1015: 1015
+(200)340-1015: 1015
+(201)300-1015: 1015
+(200)310-1045: 1045
+(200)320-1045: 1045
+(200)330-1045: 1045
+(200)340-1045: 1045
+(201)300-1045: 1045
+= iteration008.exe =
+ afhhiklnrst
+= iteration009.exe =
+key value: 10.
+= iteration010.exe =
+key value: 10.
+= directory001.exe =
+= directory002.exe =
+2000
+3.141590
+= directory003.exe =
+9
+2
+12005984
+1
+1.100000
+= directory004.exe =
+10
+3
+12005984
+13
+14.000000
+= directory005.exe =
+5
+9
+20
+2000
+3.141590
+
+x: 3
+y: 10.090000
+
+= directory006.exe =
+5
+9
+20
+2000
+3.141590
+
+x: 3
+y: 10.090000
+
+= directory007.exe =
+16
+5
+9
+21
+2000
+3.141590
+
+x: 11
+y: 12.080000
+
+
+[0]: 3
+[1]: 4
+
+= directory008.exe =
+2
+5
+9
+87
+84
+2000
+3.141590
+a
+
+x: 11
+y: 12.080000
+myArray: 
+[0]: 3
+[1]: 4
+
+mySecondArray: 
+[0]: 5
+[1]: 6
+[2]: 7
+
+
+
+[0]: 
+z: 8
+myString: [13]: first string.
+
+[1]: 
+z: 9
+myString: [14]: second string.
+
+
+= directory009.exe =
+2
+5
+9
+96
+84
+2001
+4.141590
+b
+
+x: 12
+y: 13.080000
+myArray: 
+[0]: 4
+[1]: 5
+
+mySecondArray: 
+[0]: 6
+[1]: 7
+[2]: 8
+
+
+
+[0]: 
+z: 9
+myString: [17]: new first string.
+
+[1]: 
+z: 10
+myString: [18]: new second string.
+
+
+= directory010.exe =
+2
+5
+9
+87
+84
+2001
+3.141590
+a
+
+x: 11
+y: 12.080000
+myArray: 
+[0]: 3
+[1]: 4
+
+mySecondArray: 
+[0]: 5
+[1]: 6
+[2]: 7
+
+
+
+[0]: 
+z: 8
+myString: [13]: first string.
+
+[1]: 
+z: 9
+myString: [14]: second string.
+
+
+= directory011.exe =
+26
+[19]: Command-line string
+= directory013.exe =
+Number: 973-360-8675 not in myMap2.
+Number: 973-360-8675 not in myMap3.
+Number: 973-360-8675 not in myMap4.
+Number: 973-360-8675 not in ../genData/data/testDir2->myMap.
+Number: 973-360-8675 not in myNewDir2->myMap.
+12000088
+12000088
+12000088
+= directory014.exe =
+A
+M
+3240
+4560
+10
+-11
+231234
+-1234
+8675
+-675
+1.234000
+23.456000
+= directory015.exe =
+A
+M
+3240
+4560
+10
+-11
+231234
+-1234
+8675
+-675
+1.234000
+23.456000
+= directory016.exe =
+10
+= directory017.exe =
+Empty file.
+Empty file.
+15
+15
+= stream001.exe =
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                      """"""##%%&(((((((((())))))))))**,,,,,,-...1::;;;;;;;;;;<<<===>>>>>DDSSSSS\_______aaaaaaaaaaaaaaaaabcccccccccccccccdddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffffffgghhhhhhhhhiiiiiiiiiiiiiiiiiikllllllllllllmmmmmmmmmmnnnnnnnnnnnnnnoooooooooooooooooooooppppppprrrrrrrrrrrrrrrrrrrssssssssssssssssssttttttttttttttttttttttttttttttttttttuuuuuuuvvvvvvwyyyyyy{{{{{{{{{}}}}}}}}}
+= stream002.exe =
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                      """"""##%%&(((((((((())))))))))**,,,,,,-...1::;;;;;;;;;;<<<===>>>>>DDSSSSS\_______aaaaaaaaaaaaaaaaabcccccccccccccccdddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffffffgghhhhhhhhhiiiiiiiiiiiiiiiiiikllllllllllllmmmmmmmmmmnnnnnnnnnnnnnnoooooooooooooooooooooppppppprrrrrrrrrrrrrrrrrrrssssssssssssssssssttttttttttttttttttttttttttttttttttttuuuuuuuvvvvvvwyyyyyy{{{{{{{{{}}}}}}}}}
+= stream003.exe =
+The next number was:0.
+The next number was:2.
+The next number was:4.
+The next number was:6.
+The next number was:8.
+Done.
+= sort001.exe =
+ aeeefhhiklnrst
+= sort002.exe =
+-23
+10
+34
+123
+198
+234
+= sort003.exe =
+i=-5, j=-10
+i=-5, j=10
+i=-5, j=15
+i=-1, j=10
+i=-1, j=-10
+i=1, j=10
+= sort004.exe =
+First: i=-1, j=1   c=a Second: i=10, j=12   f=120.300003 d=12.400000 l=100 
+First: i=-1, j=2   c=b Second: i=11, j=13   f=130.300003 d=-5.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=13   f=130.300003 d=14.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=13   f=130.300003 d=15.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=17   f=130.300003 d=-4.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=19   f=130.300003 d=19.400000 l=101 
+First: i=-1, j=7   c=b Second: i=10, j=15   f=-13.300000 d=14.400000 l=-11 
+First: i=10, j=2   c=d Second: i=18, j=15   f=-17.299999 d=10.400000 l=-10 
+First: i=12, j=9   c=a Second: i=-9, j=99   f=107.300003 d=-0.400000 l=356 
+First: i=12, j=9   c=a Second: i=-9, j=99   f=107.300003 d=10.400000 l=356 
+First: i=14, j=3   c=a Second: i=-9, j=99   f=107.300003 d=-0.400000 l=356 
+First: i=14, j=8   c=a Second: i=-9, j=99   f=107.300003 d=-0.400000 l=356 
+First: i=14, j=9   c=ô Second: i=-9, j=97   f=107.300003 d=-0.400000 l=356 
+= sort005.exe =
+dog blue  First: i=-1, j=2   c=b Second: i=11, j=13   f=130.30 d=-5.40 l=101 
+bat blue  First: i=-1, j=2   c=b Second: i=11, j=17   f=130.30 d=-4.40 l=101 
+pop red   First: i=14, j=3   c=a Second: i=-9, j=99   f=107.30 d=-0.40 l=356 
+cat blue  First: i=14, j=8   c=a Second: i=-9, j=99   f=107.30 d=-0.40 l=356 
+top blue  First: i= 2, j=9   c=a Second: i=-9, j=99   f=107.30 d=-0.40 l=356 
+cat blue  First: i=14, j=9   c=ô Second: i=-9, j=97   f=107.30 d=-0.40 l=356 
+red blue  First: i=10, j=2   c=d Second: i=18, j=15   f=-17.30 d=10.40 l=-10 
+cat blue  First: i=12, j=9   c=a Second: i=-9, j=99   f=107.30 d=10.40 l=356 
+cat red   First: i=-1, j=1   c=a Second: i=10, j=12   f=120.30 d=12.40 l=100 
+cat green First: i=-1, j=2   c=b Second: i=11, j=13   f=130.30 d=14.40 l=101 
+cat green First: i=-1, j=7   c=b Second: i=10, j=15   f=-13.30 d=14.40 l=-11 
+cat blue  First: i=-1, j=2   c=b Second: i=11, j=13   f=130.30 d=15.40 l=101 
+cat red   First: i=-1, j=2   c=b Second: i=11, j=19   f=130.30 d=19.40 l=101 
+= sort006.exe =
+First: i=-1, j=1   c=a Second: i=10, j=12   f=120.300003 d=12.400000 l=100 
+First: i=-1, j=2   c=b Second: i=11, j=13   f=130.300003 d=-5.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=13   f=130.300003 d=14.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=13   f=130.300003 d=15.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=17   f=130.300003 d=-4.400000 l=101 
+First: i=-1, j=2   c=b Second: i=11, j=19   f=130.300003 d=19.400000 l=101 
+First: i=-1, j=7   c=b Second: i=10, j=15   f=-13.300000 d=14.400000 l=-11 
+First: i=10, j=2   c=d Second: i=18, j=15   f=-17.299999 d=10.400000 l=-10 
+First: i=12, j=9   c=a Second: i=-9, j=99   f=107.300003 d=-0.400000 l=356 
+First: i=12, j=9   c=a Second: i=-9, j=99   f=107.300003 d=10.400000 l=356 
+First: i=14, j=3   c=a Second: i=-9, j=99   f=107.300003 d=-0.400000 l=356 
+First: i=14, j=8   c=a Second: i=-9, j=99   f=107.300003 d=-0.400000 l=356 
+First: i=14, j=9   c=ô Second: i=-9, j=97   f=107.300003 d=-0.400000 l=356 
+= member001.exe =
+First test.
+Not in map.
+In map.
+= member002.exe =
+Second test.
+In map.
+In map.
+= switches001.exe =
+./switches001.exe: usage: 
+	-i:	command-line integer 
+= switches002.exe =
+./switches002.exe: usage: 
+	-i:	command-line integer 
+	-c:	command-line character
+	-d:	command-line float
+	-b 	command-line boolean
+= init001.exe =
+(221)236-0199: 96977709.
+(221)236-0399: 96978527.
+(221)239-0199: 96980122.
+(221)239-0399: 96976885.
+(222)233-2099: 96978457.
+(222)234-0599: 96980047.
+(222)234-1299: 96979104.
+(223)234-0099: 96977739.
+(223)234-0199: 96979345.
+96978486
+= pickle001.exe =
+Empty file
+Empty file
+Initial pickle value: a
+New pickle value: c
+In init_foo: c
+Initial pickle value: c
+New pickle value: e
+In init_foo: c
+In init_foo: e
+Initial pickle value: c
+New pickle value: e
+In init_foo: e
+Initial pickle value: e
+New pickle value: g
+= pickle002.exe =
+Initial map value: 0
+New map value: 2
+Initial pickle value: a
+New pickle value: c
+Initial map value: 2
+New map value: 4
+Initial pickle value: c
+New pickle value: e
+./pickle002.exe: HRSmapCopy: Cannot copy map into a non-empty map (../genData/data/testDir2/m).
+= param001.exe =
+Empty file
+Init_foo: Initialized from parameter with value 13
+Empty file
+Init_foo: No parameter supplied; initalized with 100
+Initial pickle value for Pickle1: 13
+New pickle value for Pickle1: 20
+Init_foo: Initialized from file with value 20
+Initial pickle value for Pickle2: 20
+New pickle value for Pickle2: 27
+20
+27
+Init_foo: Initialized from file with value 20
+Init_foo: Initialized from file with value 27
+Initial pickle value for Pickle1: 20
+New pickle value for Pickle1: 27
+Init_foo: Initialized from file with value 27
+Initial pickle value for Pickle2: 27
+New pickle value for Pickle2: 34
+27
+34
+= param002.exe =
+Empty file
+Init_foo: Initialized from parameter with value 29
+Empty file
+Init_foo: No parameter supplied; initalized with 100
+Init_foo: Initialized from file with value 29
+30
+0
+4
+[4]: bye!
+
+f: 4.140000
+i: 1969
+
+
+f: 7.210000
+i: 1992
+
+
+[0]: 0
+[1]: 1
+[2]: 2
+[3]: 3
+[4]: 4
+[5]: 6
+[6]: 6
+[7]: 7
+[8]: 8
+[9]: 9
+
+29
+0
+3
+[5]: hello
+
+f: 4.140000
+i: 1969
+
+
+f: 7.210000
+i: 1992
+
+
+[0]: 0
+[1]: 1
+[2]: 2
+[3]: 3
+[4]: 4
+[5]: 5
+[6]: 6
+[7]: 7
+[8]: 8
+[9]: 9
+
+Init_foo: Initialized from file with value 30
+Init_foo: Initialized from file with value 29
+Init_foo: Initialized from file with value 30
+31
+0
+5
+[4]: bye!
+
+f: 4.140000
+i: 1969
+
+
+f: 7.210000
+i: 1992
+
+
+[0]: 0
+[1]: 1
+[2]: 2
+[3]: 3
+[4]: 4
+[5]: 7
+[6]: 6
+[7]: 7
+[8]: 8
+[9]: 9
+
+30
+0
+4
+[4]: bye!
+
+f: 4.140000
+i: 1969
+
+
+f: 7.210000
+i: 1992
+
+
+[0]: 0
+[1]: 1
+[2]: 2
+[3]: 3
+[4]: 4
+[5]: 6
+[6]: 6
+[7]: 7
+[8]: 8
+[9]: 9
+
+= param003.exe =
+Empty file
+Init_foo: No parameter supplied; initalized with 100
+The value of m<:1002:> = 100200.
+100201
+Init_foo: Initialized from file with value 100201
+Pickle value matched last compressed value: 100201.
+The value of m<:1002:> = 100201.
+100202
+= param004.exe =
+Empty file
+Init_foo: No parameter supplied; initalized with 100
+The value of m<:1002:> = 107.
+108
+Init_foo: Initialized from file with value 108
+Pickle value matched last compressed value: 107.
+Pickle value matched last compressed value: 107.
+Pickle value matched last compressed value: 108.
+Pickle value matched last compressed value: 108.
+Pickle value matched last compressed value: 108.
+The value of m<:1002:> = 108.
+109
+= param005.exe =
+Empty file
+Init_foo: No parameter supplied; initalized with 100
+The value of m<:1002:> = 100200.
+100201
+Init_foo: Initialized from file with value 100201
+Pickle value matched last compressed value: 100201.
+The value of m<:1002:> = 100201.
+100202
+= param006.exe =
+Empty file
+Init_foo: No parameter supplied; initalized with 100
+Stored for key 100 the value 100
+Stored for key 101 the value 101
+Stored for key 102 the value 102
+Stored for key 103 the value 103
+Stored for key 104 the value 104
+Stored for key 105 the value 105
+Stored for key 106 the value 106
+Stored for key 107 the value 107
+Stored for key 108 the value 108
+Stored for key 109 the value 109
+Stored for key 110 the value 110
+Pickle value matched last compressed value: 100.
+Pickle value matched last compressed value: 101.
+Pickle value matched last compressed value: 102.
+Pickle value matched last compressed value: 103.
+Pickle value matched last compressed value: 104.
+Pickle value matched last compressed value: 105.
+Pickle value matched last compressed value: 106.
+Pickle value matched last compressed value: 107.
+Pickle value matched last compressed value: 108.
+Pickle value matched last compressed value: 109.
+Key 100 had value 100
+Key 101 had value 101
+Key 102 had value 102
+Key 103 had value 103
+Key 104 had value 104
+Key 105 had value 105
+Key 106 had value 106
+Key 107 had value 107
+Key 108 had value 108
+Key 109 had value 109
+Pickle value matched last compressed value: 110.
+Key 110 had value 110
+110
+= param007a.exe =
+Stored for key 100 the value 100
+Stored for key 101 the value 101
+Stored for key 102 the value 102
+Stored for key 103 the value 103
+Stored for key 104 the value 104
+Stored for key 105 the value 105
+Stored for key 106 the value 106
+Stored for key 107 the value 107
+Stored for key 108 the value 108
+Stored for key 109 the value 109
+Stored for key 110 the value 110
+Key 100 had value 100
+Key 101 had value 101
+Key 102 had value 102
+Key 103 had value 103
+Key 104 had value 104
+Key 105 had value 105
+Key 106 had value 106
+Key 107 had value 107
+Key 108 had value 108
+Key 109 had value 109
+Key 110 had value 110
+= param007b.exe =
+Key 100 had value 100
+Key 101 had value 101
+Key 102 had value 102
+Key 103 had value 103
+Key 104 had value 104
+Key 105 had value 105
+Key 106 had value 106
+Key 107 had value 107
+Key 108 had value 108
+Key 109 had value 109
+Key 110 had value 110
+= param008.exe =
+Empty file
+Init_foo: No parameter supplied; initalized with 100
+In defFun.
+Param Set. MapNumber = 1, key = 1000, value = 1.
+Key 1000 had value 1 in map1
+Stored for key 100 the value 100
+Stored for key 101 the value 101
+Stored for key 102 the value 102
+Stored for key 103 the value 103
+Stored for key 104 the value 104
+Stored for key 105 the value 105
+Copied map.
+In defFun.
+Param not set. MapNumber = 2, key = 200, value = 2.
+Key 200 had value 2.
+Key 100 had value 100
+Key 101 had value 101
+Key 102 had value 102
+Key 103 had value 103
+Key 104 had value 104
+Key 105 had value 105
+= param009.exe =
+Input should be small!
+start!
+  npa: 222-000-0000
+    nxx: 222-233-0000
+      line: 222-233-2099
+        calls: 222-233-2099(o) 426-681-4599(t) 426-681-4599(d) 96977173 48500
+        calls: 222-233-2099(o) 820-442-6399(t) 820-442-6399(d) 96978457 5330
+  npa: 223-000-0000
+    nxx: 223-234-0000
+      line: 223-234-0099
+        calls: 223-234-0099(o) 547-906-0799(t) 855-248-4499(d) 96977739 5640
+      line: 223-234-0199
+        calls: 223-234-0199(o) 741-544-8499(t) 855-526-2899(d) 96979345 1430
+  npa: 221-000-0000
+    nxx: 221-239-0000
+      line: 221-239-0399
+        calls: 221-239-0399(o) 721-258-4199(t) 855-540-4599(d) 96976885 350
+    nxx: 221-236-0000
+      line: 221-236-0399
+        calls: 221-236-0399(o) 585-963-5599(t) 855-544-5599(d) 96978527 1260
+  npa: 222-000-0000
+    nxx: 222-234-0000
+      line: 222-234-1299
+        calls: 222-234-1299(o) 222-357-0099(t) 855-708-1599(d) 96979104 110
+      line: 222-234-0599
+        calls: 222-234-0599(o) 395-438-2799(t) 855-844-2799(d) 96980047 80
+  npa: 221-000-0000
+    nxx: 221-236-0000
+      line: 221-236-0199
+        calls: 221-236-0199(o) 936-361-5299(t) 936-361-5299(d) 96977709 710
+    nxx: 221-239-0000
+      line: 221-239-0199
+        calls: 221-239-0199(o) 974-429-8199(t) 974-429-8199(d) 96980122 9900
+The End.
+= hl001.exe =
+1000
+1003
+1006
+1009
+1012
+1015
+1018
+1021
+1024
+1027
+1030
+1033
+1036
+1039
+1042
+1045
+1048
+= hl001a.exe =
+1000
+1003
+1006
+1009
+1012
+1015
+1018
+1021
+1024
+1027
+1030
+1033
+1036
+1039
+1042
+1045
+1048
+= hl002.exe =
+1000
+1001
+1003
+1004
+1006
+1007
+1009
+1010
+1012
+1013
+1015
+1016
+1018
+1019
+1021
+1022
+1024
+1025
+1027
+1028
+1030
+1031
+1033
+1034
+1036
+1037
+1039
+1040
+1042
+1043
+1045
+1046
+1048
+1049
+= hl003.exe =
+1000
+1001
+1002
+1003
+1004
+1005
+1006
+1007
+1008
+1009
+1010
+1011
+1012
+1013
+1014
+1015
+1016
+1017
+1018
+1019
+1020
+1021
+1022
+1023
+1024
+1025
+1026
+1027
+1028
+1029
+1030
+1031
+1032
+1033
+1034
+1035
+1036
+1037
+1038
+1039
+1040
+1041
+1042
+1043
+1044
+1045
+1046
+1047
+1048
+1049
+= hl004.exe =
+1000
+1003
+1006
+1009
+1012
+1015
+1018
+1021
+1024
+1027
+1030
+1033
+1036
+1039
+1042
+1045
+1048

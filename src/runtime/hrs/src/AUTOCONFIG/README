@@ -1,0 +1,100 @@
+
+autoconfig.h
+
+    This include file contains machine specific definitions that are intended
+    to simplify writing portable code. All definitions are automatically
+    generated: just do a  "make clean" and then a "make". 
+    
+    	make clean; make
+
+    Some of the clib specific definitions (see 3.g below) require that autoconfig.h be
+    included after all standard header files.
+
+    On some machines the makefile might produce some core dumps. This is ok
+    as long as "make" terminates normally.
+
+    The files use "$(CC)" as the native C compiler. Please make sure that "$(CC)"
+    maps to your favorite C compiler (if not you might to define CC appropriately).
+    
+    1) TYPEDEFS:
+    	intX: 	    signed integer with X bits and X in {8,16,32,64}  
+    	uintX:      unsigned integer with X bits and X in {8,16,32,64}  
+	
+	Note: Make might fail if your compiler does not support all this integer
+	sizes. Let me know if you use such a compiler and I will fix that.
+	
+    2) FUNCTIONS:
+    	a) simple conversion functions:
+	
+    	intX hton_[u]intX(intX)	    converts local representation into network format
+    	intX ntoh_[u]intX(intX)	    converts network format into local representation
+
+    	b) Host -> buffer (in network format) and buffer -> host
+		
+	void store_[u]intX(int8** bp, intX v)	    "*(*bp)++ = v"
+	    	converts *v into network format and stores it into the buffer and then increments the pointer 
+		
+	void read_[u]intX(int8** bp, intX* v)	    "*v = *(*bp)++"
+	    	converts *v into network format and stores it into the buffer and then increments the pointer 
+	
+	c) similar to b) but these functions do not increment the buffer pointer:
+	
+	    	void set_[u]intX(int8* b, uintX a)  "*b = a"
+	    	void get_[u]intX(int8* b, intX* a)  "*a = *b"
+
+    3) #defines
+    
+    	a) Endian
+		
+    	#define LITTLE_ENDIAN 1  iff it is a little endian machine
+	#define BIG_ENDIAN 1	 iff it is a big endian machine
+	#define MIDDLE_ENDIAN 1  otherwise
+	
+	b) Compiler specific definitions:	
+	
+	#define MIN_ARRAY_LENGTH    1 or 0  minimum entries in an array: 0 or 1
+	#define VAR_ARRAY_LENGTH    1 or 0  1 iff compiler supports variable length arrays
+	#define TYPE_OF     	    1 or 0  1 iff compiler supports typeof expressions
+	#define ALIGN_DATA  	    1 or 0  1 iff computer needs data to be aligned
+	#define CHAR_SIGNED 	    1 or 0  1 iff char is signed
+	
+    	c) C/C++ interoperability
+	    __BEGIN_DECLS	    begin of extern "C" declarations
+	    __END_DECLS 	    end of extern "C" declarations
+	
+	d) intX constants
+	    to define a constant [u]intX just use: 
+	    IX_C(v)   	signed integer constant, e.g. I64(14) is a 64bit integer of value 14
+	    UX_C(v)    unsigned integer constant
+	    FX_C(v)   	float constant, e.g. F64(23.3) is a 64bit float of value 23.3
+	
+	e) printf labels
+	    DX_L    "%d"    for intX
+	    UX_L    "%u"    for uintX
+	    XX_L    "%x"    for intX
+
+	    EX_L    "%e"    for floatX
+	    GX_L    "%g"    for floatX
+	    FX_L    "%f"    for floatX
+	    
+	f) OS specific definitions
+	    IS_LINUX  		    1 or 0  1 iff os is Linux
+	    IS_IRIX  		    1 or 0  1 iff os is IRIX
+	    IS_SOLARIS  	    1 or 0  1 iff os is SOLARIS
+	
+	g) clib specifics
+	
+	    HAS_SNPRINTF    	    1 or 0  1 iff snprintf is in clib
+	    HAS_VSNPRINTF   	    1 or 0  1 iff vsnprint is in clib
+	    
+	    RLIMIT_VMEM     	    defined appropriately if <sys/resource.h> does not define this
+    	    RTLD_NEXT	    	    defined appropriately if <dlsym.h> does not defined this
+    	    MSG_NOSIGNAL    	    defined appropriately
+	    
+TODO:
+    1) float conversion
+    
+Let me know if you need some more definitions, functions, ...
+    
+Christof Fetzer, AT&T Labs Research, christof@research.att.com
+	
